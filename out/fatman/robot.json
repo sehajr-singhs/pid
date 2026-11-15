@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "name": "FAT MAN",
+  "generator": "spool.ingest.fatman_local",
+  "source_files": [
+    "build\\parts_final.json",
+    "build\\asm_positions.json",
+    "src\\asm_bbox.json",
+    "src\\mass.json",
+    "FAT_MAN_BOM.xlsx",
+    "robot.fs"
+  ],
+  "mass_kg": 12.7,
+  "envelope_m": {
+    "min": [
+      -0.2286,
+      -0.29197596768184975,
+      -0.024598786916015736
+    ],
+    "max": [
+      0.2286,
+      0.25062998072922577,
+      0.31491326130463937
+    ]
+  },
+  "controllers": {
+    "ftc": "REV Control Hub + Expansion Hub"
+  },
+  "provenance": {
+    "mass_kg": "estimated",
+    "mechanisms.drivetrain.gearing.ratio": "bom",
+    "mechanisms.drivetrain.wheel_radius_m": "datasheet",
+    "mechanisms.drivetrain.robot_mass_kg": "estimated",
+    "mechanisms.drivetrain.mu_rolling": "estimated",
+    "mechanisms.drivetrain.strafe_efficiency": "estimated",
+    "mechanisms.flywheel.gearing.ratio": "bom",
+    "mechanisms.flywheel.motor": "bom",
+    "mechanisms.flywheel.inertia_kgm2": "estimated",
+    "mechanisms.flywheel.target_speed_rad_s": "estimated",
+    "mechanisms.turret.gearing.ratio": "bom",
+    "mechanisms.turret.servo": "bom",
+    "mechanisms.hood.gearing.ratio": "bom",
+    "mechanisms.hood.inertia_kgm2": "estimated",
+    "mechanisms.flower_arm.servo": "bom",
+    "mechanisms.flower_arm.arm_mass_kg": "estimated",
+    "mechanisms.flower_arm.r_com_m": "estimated",
+    "mechanisms.flower_arm.inertia_kgm2": "estimated"
+  },
+  "provenance_notes": {
+    "mass_kg": "Onshape mass properties report 11.55 kg with 39 bodies missing density; +10% allowance = 12.7 kg. The 48 exported part bboxes total 1188 cm^3 (~1.4 kg at 60% solid), which covers structure only.",
+    "mechanisms.drivetrain.gearing.ratio": "13.73 internal (5203-2402-0014) x 0.8333 belt (24T motor pulley -> 20T wheel pulley) = 11.44 motor turns per wheel turn",
+    "mechanisms.flywheel.inertia_kgm2": "Rhino 72 mm wheel (0.10 kg est) + 2 stainless discs turned from 3/4in rod (109 g each): J = 0.5 m r^2 summed",
+    "mechanisms.flywheel.target_speed_rad_s": "target exit 9.4 m/s with transfer efficiency 0.5 -> rim 18.8 m/s -> 4987 rpm",
+    "mechanisms.drivetrain.mu_rolling": "mecanum rollers scrub on foam tile; 0.08 is a starting value. Pedro's Foresight Forward Deceleration Identification measures the real one.",
+    "mechanisms.drivetrain.strafe_efficiency": "mecanum strafe loses 15-30% of forward speed to roller slip; 0.78 midpoint, to be replaced by Pedro's Strafe Velocity Identification."
+  },
+  "mechanisms": [
+    {
+      "type": "mecanum_drive",
+      "name": "drivetrain",
+      "motor": "gobilda-5203-2402-0001",
+      "count": 4,
+      "gearing": {
+        "ratio": 11.4417,
+        "efficiency": 0.88,
+        "source": "bom",
+        "description": "13.73:1 planetary (eta 0.927 from datasheet torque) x 24T->20T HTD5 belt (eta 0.95)"
+      },
+      "robot_mass_kg": 12.7,
+      "wheel_radius_m": 0.048,
+      "track_width_m": 0.322,
+      "wheelbase_m": 0.288,
+      "strafe_efficiency": 0.78,
+      "mu_rolling": 0.08,
+      "r_batt_ohm": 0.03,
+      "friction": {
+        "n_bearings": 4,
+        "pulley_radius_m": 0.02,
+        "n_belts": 4
+      },
+      "notes": [
+        "wheel 96 mm mecanum (3213-3606-0002)",
+        "drive motor 5203-2402-0014 is modelled as the bare 5203-2402-0001 behind a 13.73:1 planetary, so rotor inertia reflects correctly"
+      ]
+    },
+    {
+      "type": "flywheel",
+      "name": "flywheel",
+      "motor": "gobilda-5203-2402-0001",
+      "count": 2,
+      "gearing": {
+        "ratio": 1.0,
+        "efficiency": 0.95,
+        "source": "bom",
+        "description": "20T -> 20T GT2 belt, 1:1"
+      },
+      "inertia_kgm2": 0.0001041,
+      "load_mass_kg": 0.3178,
+      "load_radius_m": 0.036,
+      "target_speed_rad_s": 522.22,
+      "target_exit_speed_m_s": 9.4,
+      "transfer_efficiency": 0.5,
+      "ball_mass_kg": 0.06,
+      "friction": {
+        "n_bearings": 4,
+        "pulley_radius_m": 0.0125,
+        "n_belts": 2,
+        "belt_preload_n": 30.0
+      },
+      "notes": [
+        "two 6000 rpm motors on one shaft, belt 158T",
+        "shooter hood servo and ball blocker servo are separate axes"
+      ]
+    },
+    {
+      "type": "servo_axis",
+      "name": "turret",
+      "servo": "swyft-balance",
+      "servo_count": 2,
+      "gearing": {
+        "ratio": 2.4,
+        "efficiency": 0.9,
+        "source": "bom",
+        "description": "25T servo horn gear -> 60T hub gear (2302-0014-0060)"
+      },
+      "inertia_kgm2": 0.008309,
+      "holding_torque_nm": 0.0,
+      "limits": {
+        "soft_min_rad": -2.356,
+        "soft_max_rad": 2.356,
+        "hard_min_rad": -2.443,
+        "hard_max_rad": 2.443
+      },
+      "notes": [
+        "spin plate on bearing stack; 135 deg soft, 140 deg hard stops"
+      ]
+    },
+    {
+      "type": "servo_axis",
+      "name": "hood",
+      "servo": "swyft-balance",
+      "servo_count": 1,
+      "gearing": {
+        "ratio": 3.9473684210526314,
+        "efficiency": 0.9,
+        "source": "bom",
+        "description": "19T -> 75T spur gears"
+      },
+      "inertia_kgm2": 0.000304,
+      "holding_torque_nm": 0.02,
+      "limits": {
+        "soft_min_rad": -0.5,
+        "soft_max_rad": 1.0
+      },
+      "notes": [
+        "hood angle sets the shot arc"
+      ]
+    },
+    {
+      "type": "servo_axis",
+      "name": "flower_arm",
+      "servo": "swyft-balance",
+      "servo_count": 2,
+      "gearing": {
+        "ratio": 1.0,
+        "efficiency": 0.95,
+        "source": "bom",
+        "description": "4-bar driven directly by two servos"
+      },
+      "inertia_kgm2": 0.016203,
+      "arm_mass_kg": 0.62,
+      "r_com_m": 0.14,
+      "holding_torque_nm": 0.8512,
+      "limits": {
+        "soft_min_rad": -0.2,
+        "soft_max_rad": 1.4
+      },
+      "notes": [
+        "4-bar linkage, 6 mm aluminium links, printed tray"
+      ]
+    }
+  ],
+  "frc_equivalent": [
+    {
+      "type": "mecanum_drive",
+      "name": "drivetrain",
+      "motor": "kraken-x60",
+      "count": 4,
+      "gearing": {
+        "ratio": 6.75,
+        "efficiency": 0.9,
+        "source": "estimated",
+        "description": "same 96 mm wheel, Kraken on a 6.75:1 gearbox"
+      },
+      "robot_mass_kg": 54.0,
+      "wheel_radius_m": 0.048,
+      "strafe_efficiency": 0.78,
+      "mu_rolling": 0.06,
+      "current_limit_a": 60.0,
+      "r_batt_ohm": 0.018,
+      "notes": [
+        "FRC-equivalent: 120 lb robot, Kraken X60 drive, 60 A per motor"
+      ]
+    },
+    {
+      "type": "flywheel",
+      "name": "flywheel",
+      "motor": "kraken-x60",
+      "count": 1,
+      "gearing": {
+        "ratio": 1.0,
+        "efficiency": 0.95,
+        "source": "estimated"
+      },
+      "inertia_kgm2": 0.0022,
+      "target_speed_rad_s": 522.22,
+      "current_limit_a": 60.0,
+      "r_batt_ohm": 0.018,
+      "notes": [
+        "FRC-equivalent: single Kraken, heavier 4.5 in wheel"
+      ]
+    },
+    {
+      "type": "turret",
+      "name": "turret",
+      "motor": "neo",
+      "count": 1,
+      "gearing": {
+        "ratio": 60.0,
+        "efficiency": 0.85,
+        "source": "estimated",
+        "description": "NEO on a 60:1 gearbox replacing the two servos"
+      },
+      "inertia_kgm2": 0.02,
+      "limits_rad": [
+        -2.356,
+        2.356
+      ],
+      "current_limit_a": 60.0,
+      "r_batt_ohm": 0.018,
+      "notes": [
+        "FRC-equivalent of the servo turret, for WPILib gains"
+      ]
+    },
+    {
+      "type": "arm",
+      "name": "flower_arm",
+      "motor": "neo",
+      "count": 2,
+      "gearing": {
+        "ratio": 25.0,
+        "efficiency": 0.85,
+        "source": "estimated",
+        "description": "2x NEO on 25:1 replacing the 4-bar servos"
+      },
+      "inertia_kgm2": 0.35,
+      "arm_mass_kg": 4.5,
+      "r_com_m": 0.35,
+      "limits_rad": [
+        -0.2,
+        1.4
+      ],
+      "current_limit_a": 60.0,
+      "r_batt_ohm": 0.018,
+      "notes": [
+        "FRC-equivalent 4-bar arm; this is where kG is a real voltage"
+      ]
+    }
+  ],
+  "bom_hits": {
+    "servo": "Summary",
+    "gt2_20t": "Drivetrain + Intake",
+    "drive_motor": "Drivetrain + Intake",
+    "flywheel_motor": "Drivetrain + Intake",
+    "turret_gear_60t": "Drivetrain + Intake",
+    "mecanum_wheel": "Drivetrain + Intake",
+    "hub_gear_60t": "Turret",
+    "rhino_wheel": "Shooter"
+  }
+}

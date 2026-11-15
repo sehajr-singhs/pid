@@ -1,0 +1,411 @@
+{
+  "robot": "FAT MAN",
+  "spool_version": "0.1.0",
+  "units": {
+    "kS": "V",
+    "kV": "V per (rad/s) rotary, V per (m/s) linear",
+    "kA": "V per (rad/s^2) rotary, V per (m/s^2) linear",
+    "kG": "V at the gravity-worst pose (arm horizontal)"
+  },
+  "mechanisms": {
+    "drivetrain": {
+      "kind": "mecanum_drive",
+      "forward": {
+        "mechanism": "drivetrain.forward",
+        "kS": 0.48728290235570554,
+        "kV": 4.428798330367425,
+        "kA": 1.2595857075821395,
+        "kG": 0.0,
+        "units": "V, V/(m/s), V/(m/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "kV/kA per m/s of chassis motion; all four motors share the load"
+        ],
+        "basis": {
+          "motor": "gobilda-5203-2402-0001",
+          "gear_ratio": 11.4417,
+          "efficiency": 0.88,
+          "n_motors": 4,
+          "mass_kg": 12.7,
+          "wheel_radius_m": 0.048,
+          "friction_force_n": 1.6252871875000001,
+          "kS_measured": false,
+          "free_output_speed_m_s": 2.6359098276009694
+        }
+      },
+      "strafe": {
+        "mechanism": "drivetrain.strafe",
+        "kS": 0.48728290235570554,
+        "kV": 5.677946577394135,
+        "kA": 1.6148534712591531,
+        "kG": 0.0,
+        "units": "V, V/(m/s), V/(m/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "strafe uses roller slip factor 0.78 on achievable velocity"
+        ],
+        "basis": {
+          "motor": "gobilda-5203-2402-0001",
+          "gear_ratio": 11.4417,
+          "efficiency": 0.88,
+          "n_motors": 4,
+          "mass_kg": 12.7,
+          "wheel_radius_m": 0.048,
+          "friction_force_n": 1.6252871875000001,
+          "kS_measured": false,
+          "free_output_speed_m_s": 2.6359098276009694,
+          "strafe_efficiency": 0.78
+        }
+      },
+      "max_forward_m_s": 2.6359098276009694,
+      "max_forward_in_s": 103.77603350363293,
+      "max_strafe_m_s": 2.056009665528756,
+      "max_strafe_in_s": 80.94530613283368,
+      "tuned": {
+        "forward": {
+          "kp": 50.00893614777604,
+          "ki": 328.5388429841213,
+          "kd": 0.48485485242161985,
+          "kS": 0.48728290235570554,
+          "kV": 4.428798330367425,
+          "kA": 1.2595857075821395
+        },
+        "strafe": {
+          "kp": 54.23366452496077,
+          "ki": 449.5850712835718,
+          "kd": 0.35389623901801315,
+          "kS": 0.48728290235570554,
+          "kV": 5.677946577394135,
+          "kA": 1.6148534712591531
+        }
+      }
+    },
+    "flywheel": {
+      "kind": "flywheel",
+      "gains": {
+        "mechanism": "flywheel",
+        "kS": 1.1166556111680634,
+        "kV": 0.018579609660945174,
+        "kA": 0.005172640338710855,
+        "kG": 0.0,
+        "units": "V, V/(rad/s), V/(rad/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "two 6000 rpm motors on one shaft, belt 158T",
+          "shooter hood servo and ball blocker servo are separate axes",
+          "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+        ],
+        "basis": {
+          "motor": "gobilda-5203-2402-0001",
+          "gear_ratio": 1.0,
+          "efficiency": 0.95,
+          "n_motors": 2,
+          "load_inertia": 0.0001041,
+          "reflected_rotor_inertia": 1.4e-05,
+          "j_eff": 0.0001181,
+          "friction_torque": 0.018049999999999997,
+          "kS_measured": false,
+          "torque_per_volt": 0.022831666666666667,
+          "free_output_speed_rad_s": 628.3185307179587
+        }
+      },
+      "motor": "gobilda-5203-2402-0001",
+      "motor_count": 2,
+      "gear_ratio": 1.0,
+      "efficiency": 0.95,
+      "inertia_kgm2": 0.0001181,
+      "free_speed_rad_s": 628.3185307179587,
+      "stall_torque_nm": 0.27398,
+      "tuned": {
+        "kp": 2.3686611554029,
+        "ki": 0.00012079786257157554,
+        "kd": 0.004883457271425917,
+        "kS": 1.1166556111680634,
+        "kV": 0.018579609660945174,
+        "kA": 0.005172640338710855,
+        "kG": 0.0
+      }
+    }
+  },
+  "servo_axes": [
+    {
+      "name": "turret",
+      "servo": "SR-Servo-02",
+      "servo_count": 2,
+      "gear_ratio": 2.4,
+      "output_speed_deg_s": 271.7391304347826,
+      "stall_torque_out_nm": 11.565570744,
+      "required_torque_nm": 0.0,
+      "torque_margin": null,
+      "servo_travel_deg": 320.0,
+      "axis_travel_deg": 133.33333333333334,
+      "settings": {
+        "control": "position (setPosition); the servo closes its own loop",
+        "pidf": "not applicable: no PIDF runs on the hub for a servo",
+        "range_mapping": "servo 320 deg -> axis 133 deg; scale setPosition(0..1) accordingly and never command the ends",
+        "slew_limit": "<= 272 deg/s output; ramp the setpoint in software",
+        "soft_limits": "clamp the commanded angle 5 deg inside the mechanical stop"
+      }
+    },
+    {
+      "name": "hood",
+      "servo": "SR-Servo-02",
+      "servo_count": 1,
+      "gear_ratio": 3.9473684210526314,
+      "output_speed_deg_s": 165.21739130434784,
+      "stall_torque_out_nm": 9.51116015131579,
+      "required_torque_nm": 0.02,
+      "torque_margin": 475.5580075657895,
+      "servo_travel_deg": 320.0,
+      "axis_travel_deg": 81.06666666666668,
+      "settings": {
+        "control": "position (setPosition); the servo closes its own loop",
+        "pidf": "not applicable: no PIDF runs on the hub for a servo",
+        "range_mapping": "servo 320 deg -> axis 81 deg; scale setPosition(0..1) accordingly and never command the ends",
+        "slew_limit": "<= 165 deg/s output; ramp the setpoint in software",
+        "soft_limits": "clamp the commanded angle 5 deg inside the mechanical stop"
+      }
+    },
+    {
+      "name": "flower_arm",
+      "servo": "SR-Servo-02",
+      "servo_count": 2,
+      "gear_ratio": 1.0,
+      "output_speed_deg_s": 652.1739130434783,
+      "stall_torque_out_nm": 5.086709355,
+      "required_torque_nm": 0.8512,
+      "torque_margin": 5.9759273437500005,
+      "servo_travel_deg": 320.0,
+      "axis_travel_deg": 320.0,
+      "settings": {
+        "control": "position (setPosition); the servo closes its own loop",
+        "pidf": "not applicable: no PIDF runs on the hub for a servo",
+        "range_mapping": "servo 320 deg -> axis 320 deg; scale setPosition(0..1) accordingly and never command the ends",
+        "slew_limit": "<= 652 deg/s output; ramp the setpoint in software",
+        "soft_limits": "clamp the commanded angle 5 deg inside the mechanical stop"
+      }
+    }
+  ],
+  "ball_recovery": {
+    "target_rad_s": 522.22,
+    "target_rpm": 4986.833662886976,
+    "energy_taken_j": 5.3016000000000005,
+    "speed_drop_rad_s": 94.51427484179322,
+    "speed_drop_pct": 18.098555176322854,
+    "dip_rad_s": 429.29039012420947,
+    "dip_pct": 17.79510740220416,
+    "recovery_time_s": 0.21399999999999997,
+    "recovery_ok": true,
+    "tolerance_pct": 2.0,
+    "pid": {
+      "kp": 2.3686611554029,
+      "ki": 0.0,
+      "kd": 0.004883457271425917
+    }
+  },
+  "scenarios": {
+    "flywheel spin-up": {
+      "before": {
+        "final": 491.1165509719388,
+        "target": 522.22,
+        "rise_time": 0.544,
+        "peak": 491.1165509719388,
+        "overshoot_pct": -5.956004945820003,
+        "settle_time": 2.0,
+        "settled": true,
+        "steady_state_error": 31.10344902806122
+      },
+      "after": {
+        "final": 522.2200002331591,
+        "target": 522.22,
+        "rise_time": 0.425,
+        "peak": 522.2200041814716,
+        "overshoot_pct": 8.007107313838154e-07,
+        "settle_time": 0.5750000000000001,
+        "settled": true,
+        "steady_state_error": -2.3315908492804738e-07
+      },
+      "tuned": {
+        "kp": 2.3686611554029,
+        "ki": 0.00012079786257157554,
+        "kd": 0.004883457271425917,
+        "kS": 1.1166556111680634,
+        "kV": 0.018579609660945174,
+        "kA": 0.005172640338710855,
+        "kG": 0.0
+      }
+    },
+    "turret slew": {
+      "before": {
+        "final": 1.5651050357557792,
+        "target": 1.5707963267948966,
+        "rise_time": 0.264,
+        "peak": 1.5651050357557792,
+        "overshoot_pct": -0.36231884058005515,
+        "settle_time": 0.327,
+        "settled": true,
+        "steady_state_error": 0.005691291039117363
+      },
+      "after": {
+        "final": 1.5651050357557792,
+        "target": 1.5707963267948966,
+        "rise_time": 0.264,
+        "peak": 1.5651050357557792,
+        "overshoot_pct": -0.36231884058005515,
+        "settle_time": 0.327,
+        "settled": true,
+        "steady_state_error": 0.005691291039117363
+      },
+      "tuned": {
+        "profile_time_s": 0.0,
+        "servo": "SR-Servo-02",
+        "ratio": 2.4
+      }
+    },
+    "hood slew": {
+      "before": {
+        "final": 0.7785686141505165,
+        "target": 0.7853981633974483,
+        "rise_time": 0.216,
+        "peak": 0.7785686141505165,
+        "overshoot_pct": -0.8695652173909817,
+        "settle_time": 0.266,
+        "settled": true,
+        "steady_state_error": 0.006829549246931799
+      },
+      "after": {
+        "final": 0.7785686141505165,
+        "target": 0.7853981633974483,
+        "rise_time": 0.216,
+        "peak": 0.7785686141505165,
+        "overshoot_pct": -0.8695652173909817,
+        "settle_time": 0.266,
+        "settled": true,
+        "steady_state_error": 0.006829549246931799
+      },
+      "tuned": {
+        "profile_time_s": 0.0,
+        "servo": "SR-Servo-02",
+        "ratio": 3.9473684210526314
+      }
+    },
+    "arm hold": {
+      "before": {
+        "final": 0.3318863148808342,
+        "target": 0.3490658503988659,
+        "rise_time": 0.069,
+        "peak": 0.33192536388333577,
+        "overshoot_pct": -4.9103876807038755,
+        "settle_time": 0.14100000000000001,
+        "settled": true,
+        "steady_state_error": 0.017179535518031697
+      },
+      "after": {
+        "final": 0.34906585039907356,
+        "target": 0.3490658503988659,
+        "rise_time": 0.07,
+        "peak": 0.34925201383630844,
+        "overshoot_pct": 0.05333189632552736,
+        "settle_time": 0.109,
+        "settled": true,
+        "steady_state_error": -2.0766721675613553e-13
+      },
+      "tuned": {
+        "kG": 1.4537,
+        "kp": 80.0,
+        "kd": 2.0
+      }
+    },
+    "drive forward": {
+      "before": {
+        "final": 1.8907527730235032,
+        "target": 2.1087278620807757,
+        "rise_time": 0.706,
+        "peak": 1.8907527730235032,
+        "overshoot_pct": -10.336805093578398,
+        "settle_time": 2.0,
+        "settled": true,
+        "steady_state_error": 0.21797508905727248
+      },
+      "after": {
+        "final": 2.1087278552574094,
+        "target": 2.1087278620807757,
+        "rise_time": 0.413,
+        "peak": 2.1087278552574094,
+        "overshoot_pct": -3.235773775795737e-07,
+        "settle_time": 0.545,
+        "settled": true,
+        "steady_state_error": 6.823366316410784e-09
+      },
+      "tuned": {
+        "kp": 50.00893614777604,
+        "ki": 328.5388429841213,
+        "kd": 0.48485485242161985,
+        "kS": 0.48728290235570554,
+        "kV": 4.428798330367425,
+        "kA": 1.2595857075821395
+      }
+    },
+    "drive strafe": {
+      "before": {
+        "final": 1.497950762453725,
+        "target": 1.644807732423005,
+        "rise_time": 0.718,
+        "peak": 1.497950762453725,
+        "overshoot_pct": -8.928518943240961,
+        "settle_time": 2.0,
+        "settled": true,
+        "steady_state_error": 0.1468569699692801
+      },
+      "after": {
+        "final": 1.6448077324241286,
+        "target": 1.644807732423005,
+        "rise_time": 0.34099999999999997,
+        "peak": 1.6606778578882464,
+        "overshoot_pct": 0.964862041465643,
+        "settle_time": 0.42,
+        "settled": true,
+        "steady_state_error": -1.1235457009206584e-12
+      },
+      "tuned": {
+        "kp": 54.23366452496077,
+        "ki": 449.5850712835718,
+        "kd": 0.35389623901801315,
+        "kS": 0.48728290235570554,
+        "kV": 5.677946577394135,
+        "kA": 1.6148534712591531
+      }
+    }
+  },
+  "provenance": {
+    "mass_kg": "estimated",
+    "mechanisms.drivetrain.gearing.ratio": "bom",
+    "mechanisms.drivetrain.wheel_radius_m": "datasheet",
+    "mechanisms.drivetrain.robot_mass_kg": "estimated",
+    "mechanisms.drivetrain.mu_rolling": "estimated",
+    "mechanisms.drivetrain.strafe_efficiency": "estimated",
+    "mechanisms.flywheel.gearing.ratio": "bom",
+    "mechanisms.flywheel.motor": "bom",
+    "mechanisms.flywheel.inertia_kgm2": "estimated",
+    "mechanisms.flywheel.target_speed_rad_s": "estimated",
+    "mechanisms.turret.gearing.ratio": "bom",
+    "mechanisms.turret.servo": "bom",
+    "mechanisms.hood.gearing.ratio": "bom",
+    "mechanisms.hood.inertia_kgm2": "estimated",
+    "mechanisms.flower_arm.servo": "bom",
+    "mechanisms.flower_arm.arm_mass_kg": "estimated",
+    "mechanisms.flower_arm.r_com_m": "estimated",
+    "mechanisms.flower_arm.inertia_kgm2": "estimated"
+  },
+  "provenance_notes": {
+    "mass_kg": "Onshape mass properties report 11.55 kg with 39 bodies missing density; +10% allowance = 12.7 kg. The 48 exported part bboxes total 1188 cm^3 (~1.4 kg at 60% solid), which covers structure only.",
+    "mechanisms.drivetrain.gearing.ratio": "13.73 internal (5203-2402-0014) x 0.8333 belt (24T motor pulley -> 20T wheel pulley) = 11.44 motor turns per wheel turn",
+    "mechanisms.flywheel.inertia_kgm2": "Rhino 72 mm wheel (0.10 kg est) + 2 stainless discs turned from 3/4in rod (109 g each): J = 0.5 m r^2 summed",
+    "mechanisms.flywheel.target_speed_rad_s": "target exit 9.4 m/s with transfer efficiency 0.5 -> rim 18.8 m/s -> 4987 rpm",
+    "mechanisms.drivetrain.mu_rolling": "mecanum rollers scrub on foam tile; 0.08 is a starting value. Pedro's Foresight Forward Deceleration Identification measures the real one.",
+    "mechanisms.drivetrain.strafe_efficiency": "mecanum strafe loses 15-30% of forward speed to roller slip; 0.78 midpoint, to be replaced by Pedro's Strafe Velocity Identification."
+  }
+}

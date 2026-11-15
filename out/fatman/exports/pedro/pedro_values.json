@@ -1,0 +1,28 @@
+{
+  "units": {
+    "maxAchievable*Velocity": "in/s",
+    "natural*Deceleration": "in/s^2",
+    "controllers": "volts per inch of error (spool interpretation)"
+  },
+  "derived": {
+    "maxAchievableForwardVelocity": 100.66269814066693,
+    "maxAchievableStrafeVelocity": 78.51690454972021,
+    "naturalForwardDeceleration": 30.88708661417323,
+    "naturalStrafeDeceleration": 35.52014960629921,
+    "heading_kP": 4.515168451785582,
+    "translational_kP_per_inch": 0.12797390789034538
+  },
+  "assumptions": {
+    "drive_efficiency": 0.97,
+    "strafe_efficiency": 0.78,
+    "mu_rolling": 0.08,
+    "pod_offsets": "2.187 / -4.572 in taken from the Pedro docs example: set yours"
+  },
+  "placeholder_fields": [
+    "coast",
+    "brake",
+    "headingBrakeCoefficients",
+    "linearBrakeCoefficients",
+    "quadraticBrakeCoefficients"
+  ]
+}

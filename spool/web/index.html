@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Spool - CAD in, tuned robot out</title>
+  <style>
+    :root { --ink:#15181d; --muted:#5d6673; --line:#dfe3e8; --accent:#2f6f9f; --bad:#b0413e; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:14px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           color:var(--ink); background:#f7f8fa; }
+    header { padding:20px 28px; border-bottom:1px solid var(--line); background:#fff;
+             display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+    h1 { font-size:18px; margin:0; letter-spacing:-0.01em; }
+    .sub { color:var(--muted); font-size:12.5px; }
+    main { padding:22px 28px 60px; max-width:1120px; }
+    .bar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+    button { font:inherit; padding:7px 14px; border-radius:7px; border:1px solid var(--line);
+             background:#fff; cursor:pointer; }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+    button:disabled { opacity:.5; cursor:default; }
+    .pill { font-size:12px; color:var(--muted); }
+    section { background:#fff; border:1px solid var(--line); border-radius:10px; padding:16px 18px;
+              margin-bottom:18px; }
+    h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+         margin:0 0 12px; }
+    table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+    th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); font-size:13px; }
+    th { color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase;
+         letter-spacing:.05em; }
+    td.num { text-align:right; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
+    img { width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .muted { color:var(--muted); }
+    .loading { display:inline-flex; gap:8px; align-items:center; color:var(--accent); }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--accent);
+           animation:pulse 1s infinite ease-in-out; }
+    .dot:nth-child(2){ animation-delay:.15s } .dot:nth-child(3){ animation-delay:.3s }
+    @keyframes pulse { 0%,100%{opacity:.25} 50%{opacity:1} }
+    code { background:#f1f3f6; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+    .err { color:var(--bad); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Spool</h1>
+  <span class="sub">CAD in, tuned robot out &mdash; physics-based starting gains for FTC and FRC</span>
+</header>
+<main>
+  <div class="bar">
+    <button class="primary" id="run">Re-run the pipeline</button>
+    <button id="reload">Reload data</button>
+    <span class="pill" id="status">spooling...</span>
+  </div>
+
+  <section>
+    <h2>Robot</h2>
+    <div id="robot" class="muted">spooling...</div>
+  </section>
+
+  <section>
+    <h2>Gains</h2>
+    <div id="gains" class="muted">spooling...</div>
+  </section>
+
+  <section>
+    <h2>Servo axes (no PIDF)</h2>
+    <div id="servos" class="muted">spooling...</div>
+  </section>
+
+  <section>
+    <h2>Step responses</h2>
+    <div class="grid" id="plots"></div>
+  </section>
+
+  <section>
+    <h2>Mechanism tagging (from robot.json)</h2>
+    <div id="mechs" class="muted">spooling...</div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (v, n=4) => (v === null || v === undefined) ? "-" :
+  (typeof v === "number" ? v.toFixed(n) : String(v));
+
+const PLOTS = ["flywheel","turret_slew","hood_slew","arm_hold","drive_forward","drive_strafe"];
+
+function setStatus(text, busy) {
+  $("status").innerHTML = busy
+    ? `<span class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span>${text}</span>`
+    : text;
+}
+
+async function getJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error((await r.json()).error || r.statusText);
+  return r.json();
+}
+
+function table(headers, rows) {
+  return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${typeof c==='number'?'num':''}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+async function loadRobot() {
+  try {
+    const r = await getJSON("/api/robot");
+    $("robot").innerHTML = `<p><strong>${r.name}</strong> &mdash; mass ${r.mass_kg} kg
+      <span class="muted">(${r.provenance?.mass_kg || "?"})</span></p>
+      <p class="muted">${Object.entries(r.provenance_notes || {}).slice(0,3).map(([k,v])=>`<code>${k}</code> ${v}`).join("<br>")}</p>`;
+    $("mechs").innerHTML = table(["Mechanism","Type","Motor / Servo","Ratio","Source"],
+      (r.mechanisms||[]).map(m => [m.name, m.type, m.motor || m.servo, m.gearing?.ratio, m.gearing?.source || "-"]));
+  } catch (e) { $("robot").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function loadGains() {
+  try {
+    const g = await getJSON("/api/gains");
+    const rows = [];
+    if (g.mechanisms?.drivetrain) {
+      for (const [label, key] of [["drivetrain forward","forward"],["drivetrain strafe","strafe"]]) {
+        const m = g.mechanisms.drivetrain[key];
+        rows.push([label, fmt(m.kS,4), fmt(m.kV,5), fmt(m.kA,5), "-", "V/(m/s)"]);
+      }
+    }
+    for (const [name, m] of Object.entries(g.mechanisms || {})) {
+      if (name === "drivetrain") continue;
+      rows.push([name, fmt(m.gains.kS,4), fmt(m.gains.kV,5), fmt(m.gains.kA,5), fmt(m.gains.kG,4), "V/(rad/s)"]);
+    }
+    $("gains").innerHTML = table(["Mechanism","kS (V)","kV","kA","kG (V)","units"], rows);
+
+    if (g.ball_recovery) {
+      const b = g.ball_recovery;
+      $("gains").innerHTML += `<p class="muted">Ball recovery: drops ${fmt(b.dip_pct,1)}%,
+        back inside 2% in ${fmt(b.recovery_time_s,3)} s (${b.recovery_ok ? "pass" : "fail"}).</p>`;
+    }
+  } catch (e) { $("gains").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+async function loadServos() {
+  try {
+    const g = await getJSON("/api/gains");
+    const rows = (g.servo_axes || []).map(s => [
+      s.name, s.servo, s.servo_count, fmt(s.gear_ratio,2),
+      Math.round(s.output_speed_deg_s), fmt(s.stall_torque_out_nm,2),
+      fmt(s.required_torque_nm,3), s.torque_margin ? fmt(s.torque_margin,1)+"x" : "-"]);
+    $("servos").innerHTML = table(
+      ["Axis","Servo","Count","Ratio","Speed (deg/s)","Torque (N m)","Required (N m)","Margin"], rows)
+      + `<p class="muted">Position servos: the servo closes its own loop, so there is no PIDF to tune.
+         Spool exports the ratio, speed, torque budget and soft limits instead.</p>`;
+  } catch (e) { $("servos").innerHTML = `<span class="err">${e.message}</span>`; }
+}
+
+function loadPlots() {
+  const grid = $("plots");
+  grid.innerHTML = "";
+  for (const name of PLOTS) {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `<img alt="${name}" src="/plots/${name}.png?t=${Date.now()}"
+      onerror="this.parentNode.innerHTML='<p class=&quot;muted&quot;>spooling... ${name}.png not generated yet</p>'">`;
+    grid.appendChild(wrap);
+  }
+}
+
+async function reloadAll() {
+  setStatus("spooling...", true);
+  await Promise.all([loadRobot(), loadGains(), loadServos()]);
+  loadPlots();
+  setStatus("ready", false);
+}
+
+$("reload").onclick = reloadAll;
+$("run").onclick = async () => {
+  const btn = $("run");
+  btn.disabled = true;
+  setStatus("spooling... running the pipeline (this takes a minute)", true);
+  try {
+    const r = await fetch("/api/run", { method: "POST", body: JSON.stringify({}) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error);
+    await reloadAll();
+    setStatus(`done in ${j.elapsed_s.toFixed(1)} s`, false);
+  } catch (e) {
+    setStatus(`failed: ${e.message}`, false);
+  } finally { btn.disabled = false; }
+};
+
+reloadAll();
+</script>
+</body>
+</html>

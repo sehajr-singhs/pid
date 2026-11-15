@@ -1,0 +1,105 @@
+{
+  "root": "chassis",
+  "units": {
+    "length": "m",
+    "angle": "rad (joint limits), deg (transforms)",
+    "mass": "kg",
+    "inertia": "kg*m^2"
+  },
+  "nodes": [
+    {
+      "name": "chassis",
+      "parent": null,
+      "position_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_kg": 54.0,
+      "inertia_kgm2": 0.5,
+      "joint": null
+    },
+    {
+      "name": "turret_yaw",
+      "parent": "chassis",
+      "position_m": [
+        0.0,
+        0.0,
+        0.18
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_kg": 1.15,
+      "inertia_kgm2": 0.0668,
+      "joint": {
+        "type": "revolute",
+        "axis": "Y",
+        "limits_rad": [
+          -2.356,
+          2.356
+        ],
+        "target": 0.0
+      }
+    },
+    {
+      "name": "flywheel",
+      "parent": "turret_yaw",
+      "position_m": [
+        0.0,
+        0.03,
+        0.08
+      ],
+      "rotation_deg": [
+        90.0,
+        0.0,
+        0.0
+      ],
+      "mass_kg": 0.35,
+      "inertia_kgm2": 0.002219,
+      "joint": {
+        "type": "continuous",
+        "axis": "X",
+        "target_rpm": 5033.9
+      }
+    },
+    {
+      "name": "arm",
+      "parent": "chassis",
+      "position_m": [
+        0.12,
+        0.0,
+        0.2
+      ],
+      "rotation_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_kg": 4.5,
+      "inertia_kgm2": 0.36625,
+      "joint": {
+        "type": "revolute",
+        "axis": "X",
+        "limits_rad": [
+          -0.2,
+          1.4
+        ],
+        "target": 0.4
+      }
+    }
+  ],
+  "drivetrain": {
+    "type": "mecanum",
+    "mass_kg": 54.0,
+    "wheel_radius_m": 0.048,
+    "max_forward_m_s": 4.516
+  }
+}

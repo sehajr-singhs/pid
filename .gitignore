@@ -1,0 +1,10 @@
+TASK.md
+RESULT.md
+.venv/
+__pycache__/
+*.egg-info/
+build/
+tools/build/
+*.aux
+*.log
+*.out

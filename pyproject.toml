@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spool"
+version = "0.1.0"
+description = "Spool: CAD in, tuned robot out. Physics-based starting gains for FTC and FRC mechanisms."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+step = ["trimesh>=4"]
+onshape = ["requests>=2.31"]
+
+[project.scripts]
+spool = "spool.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["spool*"]
+
+[tool.setuptools.package-data]
+spool = ["motors/*.json", "schema/*.json", "web/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# This laptop has a globally installed `typeguard` whose pytest plugin imports
+# ast.Str (removed in Python 3.12) and crashes pytest at startup on 3.14 before
+# any test is collected. It has nothing to do with spool, so keep it out of this
+# project's test run. Remove this line once typeguard is upgraded.
+addopts = "-p no:typeguard"

@@ -1,0 +1,126 @@
+{
+  "note": "SysId's input is a .wpilog. These are the log entry names SpoolCalibrate writes, matching docs.wpilib.org 'Loading Data'.",
+  "log_entry_conventions": {
+    "state": "sysid-test-state-<mechanism>  (string)",
+    "voltage": "spool/<mechanism>/Voltage  (double, volts)",
+    "position": "spool/<mechanism>/Position (double)",
+    "velocity": "spool/<mechanism>/Velocity (double)"
+  },
+  "mechanisms": [
+    {
+      "name": "flywheel",
+      "java_class": "Flywheel",
+      "sysid_mechanism": "Simple",
+      "sysid_state_entry": "sysid-test-state-flywheel",
+      "units": {
+        "velocity": "rad/s"
+      },
+      "feedforward": "SimpleMotorFeedforward",
+      "gains": {
+        "mechanism": "flywheel",
+        "kS": 0.09429414437716495,
+        "kV": 0.0187524574288842,
+        "kA": 0.0039147309614819175,
+        "kG": 0.0,
+        "units": "V, V/(rad/s), V/(rad/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "FRC-equivalent: single Kraken, heavier 4.5 in wheel",
+          "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+        ],
+        "basis": {
+          "motor": "kraken-x60",
+          "gear_ratio": 1.0,
+          "efficiency": 0.95,
+          "n_motors": 1,
+          "load_inertia": 0.0022,
+          "reflected_rotor_inertia": 1.9e-05,
+          "j_eff": 0.002219,
+          "friction_torque": 0.002525,
+          "kS_measured": false,
+          "torque_per_volt": 0.5668333333333333,
+          "free_output_speed_rad_s": 635.1253148007365
+        }
+      }
+    },
+    {
+      "name": "turret",
+      "java_class": "Turret",
+      "sysid_mechanism": "Simple",
+      "sysid_state_entry": "sysid-test-state-turret",
+      "units": {
+        "velocity": "rad/s"
+      },
+      "feedforward": "SimpleMotorFeedforward",
+      "gains": {
+        "mechanism": "turret",
+        "kS": 0.15750245098039214,
+        "kV": 1.1661093991493114,
+        "kA": 0.00523921568627451,
+        "kG": 0.0,
+        "units": "V, V/(rad/s), V/(rad/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "FRC-equivalent of the servo turret, for WPILib gains",
+          "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+        ],
+        "basis": {
+          "motor": "neo",
+          "gear_ratio": 60.0,
+          "efficiency": 0.85,
+          "n_motors": 1,
+          "load_inertia": 0.02,
+          "reflected_rotor_inertia": 0.046799999999999994,
+          "j_eff": 0.0668,
+          "friction_torque": 0.0335,
+          "kS_measured": false,
+          "torque_per_volt": 12.75,
+          "free_output_speed_rad_s": 10.157816246606997
+        }
+      }
+    },
+    {
+      "name": "flower_arm",
+      "java_class": "FlowerArm",
+      "sysid_mechanism": "Arm",
+      "sysid_state_entry": "sysid-test-state-flower_arm",
+      "units": {
+        "position": "rad",
+        "velocity": "rad/s"
+      },
+      "feedforward": "ArmFeedforward",
+      "gains": {
+        "mechanism": "flower_arm",
+        "kS": 0.1562985294117647,
+        "kV": 0.4858789163122131,
+        "kA": 0.034470588235294114,
+        "kG": 1.4536916470588235,
+        "units": "V, V/(rad/s), V/(rad/s^2), V",
+        "saturation_voltage": 12.0,
+        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "notes": [
+          "FRC-equivalent 4-bar arm; this is where kG is a real voltage",
+          "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+        ],
+        "basis": {
+          "motor": "neo",
+          "gear_ratio": 25.0,
+          "efficiency": 0.85,
+          "n_motors": 2,
+          "load_inertia": 0.35,
+          "reflected_rotor_inertia": 0.01625,
+          "j_eff": 0.36624999999999996,
+          "friction_torque": 0.015125,
+          "kS_measured": false,
+          "torque_per_volt": 10.625,
+          "free_output_speed_rad_s": 24.378758991856795,
+          "mass_kg": 4.5,
+          "r_com_m": 0.35,
+          "kG_pose": "horizontal (cos(theta) at runtime)"
+        }
+      }
+    }
+  ]
+}

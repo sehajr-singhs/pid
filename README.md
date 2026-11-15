@@ -12,6 +12,9 @@ spool fatman        # -> out/fatman/{robot.json,gains.json,plots,exports}
 spool web           # http://127.0.0.1:8000/  local UI
 ```
 
+New to this? `docs/QUICKSTART.md` walks an FTC team from CAD export to measured
+gains in six steps.
+
 ## What it actually computes
 
 Every gain comes from a formula or from a simulation you can re-run. Nothing is

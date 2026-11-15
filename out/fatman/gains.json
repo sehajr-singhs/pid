@@ -63,6 +63,19 @@
       "max_forward_in_s": 103.77603350363293,
       "max_strafe_m_s": 2.056009665528756,
       "max_strafe_in_s": 80.94530613283368,
+      "sources": {
+        "kS": "estimated",
+        "kV": "datasheet",
+        "kA": "estimated",
+        "kG": null,
+        "gear_ratio": "bom",
+        "detail": {
+          "kS": "friction model; measure it with SpoolCalibrate",
+          "kV": "k_e from the motor datasheet; gear ratio tagged bom",
+          "kA": "inertia / robot mass estimated from CAD geometry",
+          "kG": null
+        }
+      },
       "tuned": {
         "forward": {
           "kp": 50.00893614777604,
@@ -94,7 +107,7 @@
         "saturation_voltage": 12.0,
         "kS_source": "model (flagged: measure with SpoolCalibrate)",
         "notes": [
-          "two 6000 rpm motors on one shaft, belt 158T",
+          "two 6000 rpm motors on one shaft, 20T -> 20T GT2 belt (1:1; 158T is the belt length, not a ratio)",
           "shooter hood servo and ball blocker servo are separate axes",
           "kS is a friction model, not CAD: measure it with SpoolCalibrate"
         ],
@@ -127,6 +140,238 @@
         "kV": 0.018579609660945174,
         "kA": 0.005172640338710855,
         "kG": 0.0
+      },
+      "sources": {
+        "kS": "estimated",
+        "kV": "datasheet",
+        "kA": "estimated",
+        "kG": null,
+        "gear_ratio": "bom",
+        "detail": {
+          "kS": "friction model; measure it with SpoolCalibrate",
+          "kV": "k_e from the motor datasheet; gear ratio tagged bom",
+          "kA": "inertia / robot mass estimated from CAD geometry",
+          "kG": null
+        }
+      }
+    }
+  },
+  "frc_equivalent": {
+    "note": "Same mechanisms with FRC motors (WPILib / MoSim). Ratios, masses and inertias are assumed, not CAD.",
+    "mechanisms": {
+      "drivetrain": {
+        "kind": "mecanum_drive",
+        "forward": {
+          "mechanism": "drivetrain.forward",
+          "kS": 0.09022192614795857,
+          "kV": 2.6370643259368403,
+          "kA": 0.17877094972067042,
+          "kG": 0.0,
+          "units": "V, V/(m/s), V/(m/s^2), V",
+          "saturation_voltage": 12.0,
+          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "notes": [
+            "kV/kA per m/s of chassis motion; all four motors share the load"
+          ],
+          "basis": {
+            "motor": "kraken-x60",
+            "gear_ratio": 6.75,
+            "efficiency": 0.9,
+            "n_motors": 4,
+            "mass_kg": 54.0,
+            "wheel_radius_m": 0.048,
+            "friction_force_n": 0.11549479166666667,
+            "kS_measured": false,
+            "free_output_speed_m_s": 4.5164466830274606
+          }
+        },
+        "strafe": {
+          "mechanism": "drivetrain.strafe",
+          "kS": 0.09022192614795857,
+          "kV": 3.3808516999190257,
+          "kA": 0.2291935252829108,
+          "kG": 0.0,
+          "units": "V, V/(m/s), V/(m/s^2), V",
+          "saturation_voltage": 12.0,
+          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "notes": [
+            "strafe uses roller slip factor 0.78 on achievable velocity"
+          ],
+          "basis": {
+            "motor": "kraken-x60",
+            "gear_ratio": 6.75,
+            "efficiency": 0.9,
+            "n_motors": 4,
+            "mass_kg": 54.0,
+            "wheel_radius_m": 0.048,
+            "friction_force_n": 0.11549479166666667,
+            "kS_measured": false,
+            "free_output_speed_m_s": 4.5164466830274606,
+            "strafe_efficiency": 0.78
+          }
+        },
+        "max_forward_m_s": 4.5164466830274606,
+        "max_forward_in_s": 177.81295755545943,
+        "sources": {
+          "kS": "estimated",
+          "kV": "datasheet",
+          "kA": "estimated",
+          "kG": null,
+          "gear_ratio": "estimated",
+          "detail": {
+            "kS": "friction model; measure it with SpoolCalibrate",
+            "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
+            "kA": "inertia / robot mass estimated from CAD geometry",
+            "kG": null
+          }
+        }
+      },
+      "flywheel": {
+        "kind": "flywheel",
+        "gains": {
+          "mechanism": "flywheel",
+          "kS": 0.09429414437716495,
+          "kV": 0.0187524574288842,
+          "kA": 0.0039147309614819175,
+          "kG": 0.0,
+          "units": "V, V/(rad/s), V/(rad/s^2), V",
+          "saturation_voltage": 12.0,
+          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "notes": [
+            "FRC-equivalent: single Kraken, heavier 4.5 in wheel",
+            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+          ],
+          "basis": {
+            "motor": "kraken-x60",
+            "gear_ratio": 1.0,
+            "efficiency": 0.95,
+            "n_motors": 1,
+            "load_inertia": 0.0022,
+            "reflected_rotor_inertia": 1.9e-05,
+            "j_eff": 0.002219,
+            "friction_torque": 0.002525,
+            "kS_measured": false,
+            "torque_per_volt": 0.5668333333333333,
+            "free_output_speed_rad_s": 635.1253148007365
+          }
+        },
+        "motor": "kraken-x60",
+        "motor_count": 1,
+        "gear_ratio": 1.0,
+        "free_speed_rad_s": 635.1253148007365,
+        "stall_torque_nm": 6.801999999999999,
+        "sources": {
+          "kS": "estimated",
+          "kV": "datasheet",
+          "kA": "estimated",
+          "kG": null,
+          "gear_ratio": "estimated",
+          "detail": {
+            "kS": "friction model; measure it with SpoolCalibrate",
+            "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
+            "kA": "inertia / robot mass estimated from CAD geometry",
+            "kG": null
+          }
+        }
+      },
+      "turret": {
+        "kind": "turret",
+        "gains": {
+          "mechanism": "turret",
+          "kS": 0.15750245098039214,
+          "kV": 1.1661093991493114,
+          "kA": 0.00523921568627451,
+          "kG": 0.0,
+          "units": "V, V/(rad/s), V/(rad/s^2), V",
+          "saturation_voltage": 12.0,
+          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "notes": [
+            "FRC-equivalent of the servo turret, for WPILib gains",
+            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+          ],
+          "basis": {
+            "motor": "neo",
+            "gear_ratio": 60.0,
+            "efficiency": 0.85,
+            "n_motors": 1,
+            "load_inertia": 0.02,
+            "reflected_rotor_inertia": 0.046799999999999994,
+            "j_eff": 0.0668,
+            "friction_torque": 0.0335,
+            "kS_measured": false,
+            "torque_per_volt": 12.75,
+            "free_output_speed_rad_s": 10.157816246606997
+          }
+        },
+        "motor": "neo",
+        "motor_count": 1,
+        "gear_ratio": 60.0,
+        "free_speed_rad_s": 10.157816246606997,
+        "stall_torque_nm": 153.0,
+        "sources": {
+          "kS": "estimated",
+          "kV": "datasheet",
+          "kA": "estimated",
+          "kG": null,
+          "gear_ratio": "estimated",
+          "detail": {
+            "kS": "friction model; measure it with SpoolCalibrate",
+            "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
+            "kA": "inertia / robot mass estimated from CAD geometry",
+            "kG": null
+          }
+        }
+      },
+      "flower_arm": {
+        "kind": "arm",
+        "gains": {
+          "mechanism": "flower_arm",
+          "kS": 0.1562985294117647,
+          "kV": 0.4858789163122131,
+          "kA": 0.034470588235294114,
+          "kG": 1.4536916470588235,
+          "units": "V, V/(rad/s), V/(rad/s^2), V",
+          "saturation_voltage": 12.0,
+          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "notes": [
+            "FRC-equivalent 4-bar arm; this is where kG is a real voltage",
+            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+          ],
+          "basis": {
+            "motor": "neo",
+            "gear_ratio": 25.0,
+            "efficiency": 0.85,
+            "n_motors": 2,
+            "load_inertia": 0.35,
+            "reflected_rotor_inertia": 0.01625,
+            "j_eff": 0.36624999999999996,
+            "friction_torque": 0.015125,
+            "kS_measured": false,
+            "torque_per_volt": 10.625,
+            "free_output_speed_rad_s": 24.378758991856795,
+            "mass_kg": 4.5,
+            "r_com_m": 0.35,
+            "kG_pose": "horizontal (cos(theta) at runtime)"
+          }
+        },
+        "motor": "neo",
+        "motor_count": 2,
+        "gear_ratio": 25.0,
+        "free_speed_rad_s": 24.378758991856795,
+        "stall_torque_nm": 127.5,
+        "sources": {
+          "kS": "estimated",
+          "kV": "datasheet",
+          "kA": "estimated",
+          "kG": "estimated",
+          "gear_ratio": "estimated",
+          "detail": {
+            "kS": "friction model; measure it with SpoolCalibrate",
+            "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
+            "kA": "inertia / robot mass estimated from CAD geometry",
+            "kG": "arm mass and centre of mass estimated from CAD geometry"
+          }
+        }
       }
     }
   },

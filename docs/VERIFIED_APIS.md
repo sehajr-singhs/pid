@@ -86,6 +86,7 @@ the field.
 | Docs intro | https://docs.mosimulator.com/modding/intro | robot mods only; fields, game pieces, rules, physics, UI, audio are **not** moddable |
 | Code walkthrough | https://docs.mosimulator.com/modding/lynk-walkthrough/code | `GenericJoint`, `GenericElevator`, `PidConstants`, `SetPid`, `UpdatePid`, `SetTargetAngle`, `SetTarget(...).withAxis(...)`, `JointAxis.X`, base class `ReefscapeRobotBase`, `CurrentSetpoint` |
 | Mod building | https://raw.githubusercontent.com/MoSimulator/MoSim-Docs/main/Site/modding/lynk-walkthrough/mod-building.md | Addressables group + `modpack_metadata` label, `catalog.hash` / `settings.json` from `Library/com.unity.addressables/aa/Windows`, `.dll` from `Library/ScriptAssemblies` |
+| `GenericJoint.cs` source | https://github.com/Tuff-Modding/MoSim-Modding/blob/main/Assets/Scripts/RobotFramework/Components/GenericJoint.cs | the `JointAxis` enum (`X`, `Y`, `Z`), `PIDAngle.withAxis`, `PIDLinear.withAxis`, `Velocity.WithAxis`, `SetAngularVelocity` |
 
 ### Verified facts
 
@@ -94,9 +95,21 @@ the field.
 * Install path: `%userprofile%\AppData\LocalLow\CascadeStudios\MoSimulator\Mods`.
 * **Mods can carry custom C# code** — the `.dll` is described as "the robot's
   code". The brief's "UNVERIFIED" question is answered: yes.
-* Robot code is a class deriving from a game-specific base (the walkthrough uses
-  `ReefscapeRobotBase`), driving `GenericJoint` objects configured with
-  `PidConstants`.
+### Symbols used, and where each was read
+
+| Symbol | Where it appears | Source |
+|---|---|---|
+| `ReefscapeRobotBase`, `CurrentSetpoint` | blank robot template, `switch (CurrentSetpoint)` | docs "Code" page |
+| `ReefscapeSetpoints.Stow` / `.Place` / `.L4` | the same switch | docs "Code" page |
+| `GenericJoint`, `GenericElevator`, `PidConstants` | serialized fields and PID setup | docs "Code" page |
+| `SetPid(pid)` / `UpdatePid(pid)` | `Start()` / `LateUpdate()` | docs "Code" page |
+| `SetTargetAngle(rad).withAxis(JointAxis.X)` | `UpdateSetpoints()` | docs "Code" page; `PIDAngle.withAxis` in `GenericJoint.cs` |
+| `SetAngularVelocity(deg/s).WithAxis(axis)` | velocity command | `GenericJoint.cs` (`Velocity.WithAxis`, `SetAngularVelocity`) |
+| `JointAxis.X` / `.Y` / `.Z` | `switch (linearAxis)` maps X/Y/Z to right/up/forward | `GenericJoint.cs` |
+
+All of these are emitted by `export/mosim.py`. `ReefscapeRobotBase` and
+`ReefscapeSetpoints` are **game-specific** (Reefscape); another game renames them,
+which the generated file says in its header.
 
 ### Consequence for FAT MAN
 
@@ -110,6 +123,11 @@ No `.bundle` is produced (needs the Unity editor and the team's meshes), and the
 C# file is not compiled (no Unity assemblies on this laptop). The hierarchy,
 masses, inertias and gains are real; the bundle is a Unity-side step.
 
+`SetTarget(value)` semantics are joint-configuration dependent (the walkthrough
+uses it for an elevator height in inches), so the flywheel export uses the
+verified `SetAngularVelocity` in degrees/second instead of guessing what a
+`SetTarget` on a rotational joint means.
+
 ---
 
 ## 3. WPILib (FRC)
@@ -118,6 +136,7 @@ masses, inertias and gains are real; the bundle is a Unity-side step.
 |---|---|---|
 | `edu.wpi.first.math.controller.SimpleMotorFeedforward` | `new SimpleMotorFeedforward(kS, kV, kA)`, `.calculate(velocity, acceleration)` | https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/feedforward.html |
 | `edu.wpi.first.math.controller.ArmFeedforward` | `new ArmFeedforward(kS, kG, kV, kA)`, `.calculate(position, velocity, acceleration)`, **position in radians** | same page |
+| `edu.wpi.first.math.controller.PIDController` | `new PIDController(kP, kI, kD)`, `.calculate(measurement, setpoint)` | https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/pidcontroller.html |
 | `edu.wpi.first.math.controller.ElevatorFeedforward` | `new ElevatorFeedforward(kS, kG, kV, kA)`, `.calculate(velocity, acceleration)` | same page |
 | `setVoltage()` | recommended way to apply feedforward (compensates sag) | same page |
 | Gain units | kS volts, kV volts·s/unit, kA volts·s²/unit; C++ throws on unit mismatch | same page |
@@ -152,6 +171,10 @@ match the real SDK field-for-field. The stub files say so in their headers.
 
 `getCurrent(CurrentUnit.AMPS)` is wrapped in a `try/catch (RuntimeException)`:
 the goBILDA 5203 does not report current, and the fit does not need the column.
+
+The Pedro exporter also uses `com.qualcomm.robotcore.hardware.DcMotorSimple`
+(`Direction.FORWARD` / `REVERSE`) and `HardwareMap`; both appear in the Pedro
+Constants example linked in §1.
 
 ---
 
@@ -193,3 +216,5 @@ not publish it); each database entry says so and marks it in
 | MoSim `.bundle` format | not attempted; Unity-only |
 | SysId JSON dataset format | not documented publicly; not emitted |
 | goBILDA 96 mm mecanum roller geometry | not needed; strafe efficiency is a measured/estimated scalar |
+| MoSim `SetTarget` semantics | configuration-dependent; the flywheel uses verified `SetAngularVelocity` instead |
+| MoSim `.bundle` contents / build | Unity-only; not attempted |

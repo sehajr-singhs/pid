@@ -108,7 +108,7 @@
         "belt_preload_n": 30.0
       },
       "notes": [
-        "two 6000 rpm motors on one shaft, belt 158T",
+        "two 6000 rpm motors on one shaft, 20T -> 20T GT2 belt (1:1; 158T is the belt length, not a ratio)",
         "shooter hood servo and ball blocker servo are separate axes"
       ]
     },

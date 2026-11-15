@@ -30,6 +30,22 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _exports(self) -> bytes:
+        """Every generated export file, for the download buttons."""
+        base = self.out_dir.resolve()
+        root = base / "exports"
+        items = []
+        if root.exists():
+            for f in sorted(root.rglob("*")):
+                if f.is_file():
+                    items.append({
+                        "group": f.parent.name,
+                        "name": f.name,
+                        "path": "/" + f.relative_to(base).as_posix(),
+                        "bytes": f.stat().st_size,
+                    })
+        return json.dumps(items).encode()
+
     def _json_file(self, name: str) -> None:
         path = self.out_dir / name
         if not path.exists():
@@ -50,6 +66,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/gains":
             self._json_file("gains.json")
             return
+        if path == "/api/exports":
+            self._send(200, self._exports())
+            return
         if path == "/api/summary":
             p = self.out_dir / "SUMMARY.md"
             if not p.exists():
@@ -66,8 +85,9 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(404, b"no such plot", "text/plain")
             return
         if path.startswith("/exports/"):
-            f = self.out_dir / path.lstrip("/")
-            if f.exists() and f.is_file():
+            base = self.out_dir.resolve()
+            f = (base / path.lstrip("/")).resolve()
+            if f.is_file() and base in f.parents:
                 self._send(200, f.read_bytes(), "text/plain; charset=utf-8")
             else:
                 self._send(404, b"no such export", "text/plain")

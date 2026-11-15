@@ -20,7 +20,7 @@ import com.acmerobotics.dashboard.config.Config;
 public final class SpoolGains {
     private SpoolGains() {}
 
-    /** Shooter flywheel - two 6000 rpm motors on one shaft, belt 158T */
+    /** Shooter flywheel - two 6000 rpm motors on one shaft, 20T -> 20T GT2 belt (1:1; 158T is the belt length, not a ratio) */
     public static class Flywheel {
         // --- feedforward (CAD + datasheet) ---
         public static double kS = 1.11666;

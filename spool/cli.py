@@ -264,6 +264,65 @@ def _arm_scenario(arm_hold: dict):
     return s
 
 
+def _source_tags(robot_doc: dict, mech_key: str, *, has_kG: bool) -> dict:
+    """Which input decides each gain: cad | bom | datasheet | estimated.
+
+    kS is always `estimated`: it is a friction model, not a CAD quantity, and
+    every exporter says so. kV comes from k_e (motor datasheet) through a gear
+    ratio whose own tag is reported alongside. kA and kG depend on inertia,
+    mass or centre of mass, which are estimated from CAD geometry.
+    """
+    prov = robot_doc.get("provenance", {})
+    ratio = prov.get(f"mechanisms.{mech_key}.gearing.ratio", "estimated")
+    return {
+        "kS": "estimated",
+        "kV": "datasheet",
+        "kA": "estimated",
+        "kG": "estimated" if has_kG else None,
+        "gear_ratio": ratio,
+        "detail": {
+            "kS": "friction model; measure it with SpoolCalibrate",
+            "kV": f"k_e from the motor datasheet; gear ratio tagged {ratio}",
+            "kA": "inertia / robot mass estimated from CAD geometry",
+            "kG": ("arm mass and centre of mass estimated from CAD geometry"
+                   if has_kG else None),
+        },
+    }
+
+
+def _frc_gains(robot_doc: dict, frc_model) -> dict:
+    """The FRC-equivalent mechanism set, for the WPILib and MoSim exports."""
+    mechanisms = {}
+    if frc_model.drive:
+        d = frc_model.drive
+        mechanisms["drivetrain"] = {
+            "kind": "mecanum_drive",
+            "forward": d.gains_forward.as_dict(),
+            "strafe": d.gains_strafe.as_dict(),
+            "max_forward_m_s": d.free_speed_forward,
+            "max_forward_in_s": d.free_speed_forward * IN_PER_M,
+            "sources": _source_tags(robot_doc, "frc.drivetrain", has_kG=False),
+        }
+    for name, axis in frc_model.rotary.items():
+        mechanisms[name] = {
+            "kind": axis.params.get("type", "rotary"),
+            "gains": axis.gains.as_dict(),
+            "motor": axis.motor.key,
+            "motor_count": axis.n_motors,
+            "gear_ratio": axis.gearbox.ratio,
+            "free_speed_rad_s": axis.free_speed,
+            "stall_torque_nm": axis.max_torque,
+            "sources": _source_tags(robot_doc, f"frc.{name}", has_kG=axis.gains.kG > 0),
+        }
+    return {
+        "note": (
+            "Same mechanisms with FRC motors (WPILib / MoSim). Ratios, masses and "
+            "inertias are assumed, not CAD."
+        ),
+        "mechanisms": mechanisms,
+    }
+
+
 def _gains_document(robot_doc, model, frc_model, scenarios, shot, servo_table) -> dict:
     mechanisms = {}
     if model.drive:
@@ -276,6 +335,7 @@ def _gains_document(robot_doc, model, frc_model, scenarios, shot, servo_table) -
             "max_forward_in_s": d.free_speed_forward * IN_PER_M,
             "max_strafe_m_s": d.free_speed_strafe,
             "max_strafe_in_s": d.free_speed_strafe * IN_PER_M,
+            "sources": _source_tags(robot_doc, "drivetrain", has_kG=False),
             "tuned": {
                 "forward": scenarios["drive forward"].tuned if scenarios.get("drive forward") else {},
                 "strafe": scenarios["drive strafe"].tuned if scenarios.get("drive strafe") else {},
@@ -295,6 +355,7 @@ def _gains_document(robot_doc, model, frc_model, scenarios, shot, servo_table) -
             "free_speed_rad_s": axis.free_speed,
             "stall_torque_nm": axis.max_torque,
             "tuned": dict(scn.tuned) if scn is not None else {},
+            "sources": _source_tags(robot_doc, name, has_kG=axis.gains.kG > 0),
         }
     return {
         "robot": robot_doc["name"],
@@ -306,6 +367,7 @@ def _gains_document(robot_doc, model, frc_model, scenarios, shot, servo_table) -
             "kG": "V at the gravity-worst pose (arm horizontal)",
         },
         "mechanisms": mechanisms,
+        "frc_equivalent": _frc_gains(robot_doc, frc_model),
         "servo_axes": servo_table,
         "ball_recovery": {k: v for k, v in shot.items() if k != "trace"},
         "scenarios": {
@@ -368,6 +430,25 @@ def _summary(robot_doc, model, scenarios, shot, servo_table, plots, exports, out
     return "\n".join(lines) + "\n"
 
 
+def _predicted_gains(doc: dict, mechanism: str | None) -> dict:
+    """Pull the flat {kS, kV, kA, kG} block out of a gains document."""
+    if mechanism:
+        block = doc.get("mechanisms", {}).get(mechanism, {})
+        gains = block.get("gains", block)
+        if isinstance(gains, dict) and "kS" in gains:
+            return gains
+        raise SystemExit(
+            f"--mechanism {mechanism!r} not found in the prediction file "
+            f"(keys: {', '.join(doc.get('mechanisms', {})) or 'none'})"
+        )
+    if "kS" in doc:
+        return doc
+    raise SystemExit(
+        "--predicted needs either a flat {kS, kV, kA, kG} file or a spool "
+        "gains.json plus --mechanism flywheel"
+    )
+
+
 def cmd_calibrate(args) -> int:
     from .runtime import fit as fitmod
 
@@ -376,7 +457,8 @@ def cmd_calibrate(args) -> int:
     print(json.dumps(result.as_dict(), indent=2))
     if args.predicted:
         predicted = json.loads(Path(args.predicted).read_text(encoding="utf-8"))
-        print(json.dumps(fitmod.compare(result, predicted), indent=2))
+        gains = _predicted_gains(predicted, args.mechanism)
+        print(json.dumps(fitmod.compare(result, gains), indent=2))
     return 0
 
 
@@ -395,6 +477,7 @@ def main(argv: list[str] | None = None) -> int:
     p_cal.add_argument("log")
     p_cal.add_argument("--gravity", action="store_true")
     p_cal.add_argument("--predicted", help="JSON with kS/kV/kA from the CAD model")
+    p_cal.add_argument("--mechanism", help="key inside gains.json (e.g. flywheel) for --predicted")
 
     p_web = sub.add_parser("web", help="serve the local web UI")
     p_web.add_argument("--port", type=int, default=8000)

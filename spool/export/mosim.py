@@ -81,7 +81,12 @@ CS_TEMPLATE = Template(
 // Verified API surface used here (docs.mosimulator.com, "Code" page):
 //   GenericJoint, GenericElevator, PidConstants, JointAxis
 //   joint.SetPid(pid) / joint.UpdatePid(pid) / joint.SetTargetAngle(rad)
-//   joint.SetTarget(value).withAxis(JointAxis.X)
+//   joint.SetTargetAngle(rad).withAxis(JointAxis.X|Y|Z)
+// and the GenericJoint.cs source (MoSim-Modding): JointAxis has X/Y/Z, and
+//   joint.SetAngularVelocity(deg/s).WithAxis(JointAxis.X) is the velocity command.
+// ReefscapeRobotBase / ReefscapeSetpoints are game-specific: rename for another
+// game, and note that SetTarget on a joint is configuration-dependent, so the
+// flywheel uses SetAngularVelocity (verified) rather than SetTarget.
 namespace Prefabs.RobotMods.${ns}
 {
     using UnityEngine;
@@ -152,7 +157,8 @@ namespace Prefabs.RobotMods.${ns}
         {
             turretYaw.SetTargetAngle(_turretTargetDeg * Mathf.Deg2Rad).withAxis(JointAxis.Y);
             hood.SetTargetAngle(_hoodTargetDeg * Mathf.Deg2Rad).withAxis(JointAxis.X);
-            flywheel.SetTarget(_flywheelTargetRpm).withAxis(JointAxis.X);
+            // Degrees/second (GenericJoint.cs), so rpm x 6.
+            flywheel.SetAngularVelocity(_flywheelTargetRpm * 6f).WithAxis(JointAxis.X);
             arm.SetTargetAngle(_armTargetDeg * Mathf.Deg2Rad).withAxis(JointAxis.X);
         }
     }

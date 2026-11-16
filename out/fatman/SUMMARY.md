@@ -29,7 +29,7 @@ Ball recovery: drop 17.8%, recovery 0.214 s (PASS at 2% in 0.5 s).
 
 | Axis | Servo | Ratio | Speed (deg/s) | Torque out (N m) | Required (N m) | Margin |
 |---|---|---|---|---|---|---|
-| turret | SR-Servo-02 | 2.40 | 272 | 11.57 | 0.000 | - |
+| turret | SR-Servo-02 | 2.40 | 272 | 11.57 | 0.901 | 12.8x |
 | hood | SR-Servo-02 | 3.95 | 165 | 9.51 | 0.020 | 475.6x |
 | flower_arm | SR-Servo-02 | 1.00 | 652 | 5.09 | 0.851 | 6.0x |
 

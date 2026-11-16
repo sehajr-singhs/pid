@@ -124,7 +124,7 @@
         "description": "25T servo horn gear -> 60T hub gear (2302-0014-0060)"
       },
       "inertia_kgm2": 0.008309,
-      "holding_torque_nm": 0.0,
+      "holding_torque_nm": 0.901,
       "limits": {
         "soft_min_rad": -2.356,
         "soft_max_rad": 2.356,

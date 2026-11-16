@@ -281,7 +281,7 @@ def build_robot(root: str | Path) -> dict:
                 "gearing": {"ratio": turret_ratio, "efficiency": 0.9, "source": "bom",
                              "description": "25T servo horn gear -> 60T hub gear (2302-0014-0060)"},
                 "inertia_kgm2": round(turret_j, 6),
-                "holding_torque_nm": 0.0,
+                "holding_torque_nm": 0.901,
                 "limits": {"soft_min_rad": -2.356, "soft_max_rad": 2.356,
                             "hard_min_rad": -2.443, "hard_max_rad": 2.443},
                 "notes": ["spin plate on bearing stack; 135 deg soft, 140 deg hard stops"],

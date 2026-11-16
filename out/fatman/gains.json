@@ -383,8 +383,8 @@
       "gear_ratio": 2.4,
       "output_speed_deg_s": 271.7391304347826,
       "stall_torque_out_nm": 11.565570744,
-      "required_torque_nm": 0.0,
-      "torque_margin": null,
+      "required_torque_nm": 0.901,
+      "torque_margin": 12.836371524972254,
       "servo_travel_deg": 320.0,
       "axis_travel_deg": 133.33333333333334,
       "settings": {

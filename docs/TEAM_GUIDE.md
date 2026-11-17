@@ -30,6 +30,31 @@ This reads your local CAD export and BOM, computes physics-based gains (kS, kV, 
 | `exports/wpilib/` | FRC-equivalent `Constants.java` + SysId field map |
 | `exports/mosim/` | FRC-equivalent mod skeleton (hierarchy + params + C#) |
 
+Open `docs/demo/index.html` in any browser for a read-only page with the same
+gains, plots and before/after table. It needs no server and no network, and every
+`spool fatman` rebuilds it (`spool demo` rebuilds it from an existing `out/`).
+
+### Turret travel: one number Spool will not guess
+
+The FAT MAN CAD encodes two different turret travels: soft stops 270 deg apart
+(-135 to +135 deg) and hard stops 280 deg apart. The 25T to 60T servo gearing can
+only produce 320 deg / 2.40 = 133.3 deg at the axis, which cannot reach either
+reading. `out/fatman/SUMMARY.md` opens with a WARNING when the CAD holds two
+numbers like this, and `robot.json` carries the same text under `turret_travel`.
+
+Measure the real travel between the hard stops on the built robot, then:
+
+```bash
+spool fatman --turret-travel-deg 132
+```
+
+That sets the hard stops to +-66 deg and the soft stops 5 deg inside (+-61 deg),
+tags the limits `measured` in `robot.json`, and replaces the warning with the
+measured values. Without the flag Spool keeps the CAD encoding exactly as written
+and keeps warning; it does not pick a value. If the measured travel is still more
+than the gearing can reach (133.3 deg at 2.4:1), the warning stays: that means
+the gear ratio or the measurement is wrong, and only the team can say which.
+
 ## 3. Drop Pedro Constants into your TeamCode
 
 1. Copy `out/fatman/exports/pedro/Constants.java` into `TeamCode/src/.../pedro/`
@@ -63,6 +88,47 @@ spool calibrate flywheel.csv --predicted out/fatman/gains.json --mechanism flywh
 "kS": { "cad": 1.1167, "fitted": 1.1189, "abs_diff": 0.0022, "rel_diff": 0.002 }
 ```
 
+### Log format accepted by `spool calibrate`
+
+The canonical header is:
+
+```
+time_s,voltage_v,velocity,position,current
+```
+
+Only `time_s`, `voltage_v` and `velocity` are required. `position` is used by
+`--gravity`; `current` is read but the fit does not need it. Header names are
+matched loosely, so `t`, `time`, `voltage`, `volts`, `speed`, and units written
+into the name (`velocity (ticks/s)`) all load.
+
+Velocity is rad/s unless you say otherwise. Encoder counts are common on a real
+FTC log, so:
+
+| What the log records | Command |
+|---|---|
+| rad/s (SpoolCalibrate) | `spool calibrate flywheel.csv` |
+| ticks/s, bare `velocity` column | `spool calibrate flywheel.csv --units ticks --ticks-per-rev 28` |
+| a `velocity_ticks_s` column | `spool calibrate flywheel.csv --ticks-per-rev 28` |
+| old `t,voltage,velocity` header | `spool calibrate flywheel.csv` |
+
+`--ticks-per-rev` is encoder counts per revolution of the shaft your velocity is
+measured on. On FAT MAN that is 28 on the flywheel (goBILDA 5203 at 1:1), 384.5
+for the 435 rpm gearmotor and 537.7 for the 312 rpm one. Position is converted
+with the same factor, so `--gravity` works on a ticks log too.
+
+A minimal rad/s log looks like this:
+
+```csv
+time_s,voltage_v,velocity
+0.000,1.00,0.0
+0.010,1.05,0.42
+0.020,1.10,0.97
+```
+
+If a required column is missing, a row is not numeric or a ticks log has no
+`--ticks-per-rev`, the command stops with the column names it expected instead of
+fitting zeros. The fitted gains are always in rad/s, whatever the input header.
+
 ## 6. Paste Measured Gains Back
 
 Update `gains.json` (or `robot.json` with `kS_measured`), re-run `spool fatman`, and downloads update.
@@ -89,6 +155,8 @@ Update `gains.json` (or `robot.json` with `kS_measured`), re-run `spool fatman`,
 
 **Troubleshooting:**
 - `spool: command not found` — `pip install -e .` didn't finish, or scripts dir not on PATH; use `python -m spool.cli fatman`
+- `a ticks/s log needs --ticks-per-rev` — add the encoder's counts per revolution, or pass `--units rad` if the column really is rad/s
+- `SUMMARY.md` says the turret travel is ambiguous — measure the travel between hard stops and pass `--turret-travel-deg <total deg>`
 - Web UI `/api/run` takes minutes — that's the full optimizer; use `spool fatman --no-tune` for fast export only
 - Pedro constants look like old examples — Spool emits current `ForesightConfig` API, not the old one
 

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spool demo - FAT MAN</title>
+<style>
+  :root {
+    --bg:#0a0c10; --panel:#11151b; --panel-2:#141a22; --line:#232b36;
+    --ink:#e8ecf2; --muted:#8b97a7; --faint:#5d6877;
+    --accent:#7cc4ff; --amber:#f0b86e; --bad:#ff7a7a; --good:#67d391;
+    --cad:#8ea6ff; --bom:#f0b86e; --datasheet:#67d391; --estimated:#c9a0ff;
+    --radius:12px;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background:var(--bg); color:var(--ink);
+    font:14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  code { font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  header {
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:18px 26px; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  h1 { margin:0; font-size:21px; font-weight:650; letter-spacing:-0.03em; }
+  h1 .dot { color:var(--accent); }
+  .sub { color:var(--muted); font-size:12.5px; }
+  .status {
+    margin-left:auto; display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; color:var(--muted);
+    border:1px solid var(--line); border-radius:999px; padding:5px 12px;
+    background:var(--panel-2);
+  }
+  .spinner {
+    width:11px; height:11px; border-radius:50%;
+    border:2px solid var(--line); border-top-color:var(--accent);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  main { max-width:1180px; margin:0 auto; padding:20px 26px 70px; }
+  section {
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:18px;
+  }
+  h2 {
+    margin:0 0 14px; font-size:11.5px; font-weight:650; text-transform:uppercase;
+    letter-spacing:.09em; color:var(--muted);
+  }
+  .facts { display:flex; gap:22px; flex-wrap:wrap; color:var(--muted); font-size:12.5px; margin-top:8px; }
+  .facts b { color:var(--ink); font-weight:600; }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  th {
+    text-align:left; padding:7px 9px; border-bottom:1px solid var(--line);
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--faint); font-weight:600; white-space:nowrap;
+  }
+  td { padding:9px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  td.num { text-align:right; }
+  .mech { font-weight:600; }
+  .units { color:var(--faint); font-size:11px; }
+  .chip {
+    display:inline-block; margin:1px 2px 1px 0; padding:1px 7px; border-radius:999px;
+    font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; font-weight:600;
+    border:1px solid currentColor; opacity:.9;
+  }
+  .t-cad { color:var(--cad); } .t-bom { color:var(--bom); }
+  .t-datasheet { color:var(--datasheet); } .t-estimated { color:var(--estimated); }
+  .dash { color:var(--faint); }
+  .note, .warn {
+    border-radius:10px; padding:12px 14px; margin:0 0 16px; font-size:12.5px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--muted);
+  }
+  .warn { border-color:#4a3520; background:#1d1610; color:var(--amber); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:16px; }
+  figure { margin:0; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  figure img { display:block; width:100%; height:auto; }
+  figcaption {
+    background:var(--panel-2); color:var(--muted); font-size:11.5px;
+    padding:7px 10px; border-top:1px solid var(--line);
+  }
+  .ok { color:var(--good); } .bad { color:var(--bad); }
+  .muted { color:var(--muted); font-size:12.5px; }
+  footer { color:var(--faint); font-size:11.5px; text-align:center; padding:8px 0 0; }
+  @media (max-width:640px) {
+    header { padding:14px 16px; } main { padding:16px; } section { padding:14px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>spool<span class="dot">.</span> demo</h1>
+  <span class="sub">CAD in, tuned robot out</span>
+  <span class="status" id="loading"><span class="spinner"></span>spooling...</span>
+</header>
+
+<main>
+  <section>
+    <h2>Robot</h2>
+    <div><b>FAT MAN</b></div>
+    <div class="facts">
+      <span>mass <b>12.70 kg</b></span>
+      <span>spool <b>0.1.0</b></span>
+      <span>source <b>out/fatman</b></span>
+    </div>
+  </section>
+
+  <div class="warn"><b>Turret travel warning.</b> The turret travel in the CAD is ambiguous: the CAD soft stops are 270 deg apart (-135 to 135 deg) and the hard stops are 280 deg apart (-140 to 140 deg); the servo gearing can only reach 133.3 deg at the axis (320 deg usable / 2.40:1). Those numbers cannot all be right, and Spool is not guessing which one to keep. Measure the real travel between the hard stops on the robot and re-run `spool fatman --turret-travel-deg &lt;total deg&gt;`. Until then the CAD stops are kept exactly as encoded and the 0 to 90 deg slew test may run past the physical stop.</div>
+
+  <section>
+    <h2>Gains</h2>
+    <table>
+      <thead><tr>
+        <th>Mechanism</th><th>kS (V)</th><th>kV</th><th>kA</th><th>kG (V)</th>
+        <th>Units</th><th>Source</th>
+      </tr></thead>
+      <tbody>
+<tr><td class="mech">drivetrain forward</td><td class="num">0.4873</td><td class="num">4.42880</td><td class="num">1.25959</td><td class="num">-</td><td class="units">V, V/(m/s), V/(m/s^2)</td><td><span class="chip t-estimated">estimated</span> <span class="chip t-datasheet">datasheet</span> <span class="chip t-estimated">estimated</span></td></tr>
+<tr><td class="mech">drivetrain strafe</td><td class="num">0.4873</td><td class="num">5.67795</td><td class="num">1.61485</td><td class="num">-</td><td class="units">V, V/(m/s), V/(m/s^2)</td><td><span class="chip t-estimated">estimated</span> <span class="chip t-datasheet">datasheet</span> <span class="chip t-estimated">estimated</span></td></tr>
+<tr><td class="mech">flywheel</td><td class="num">1.1167</td><td class="num">0.01858</td><td class="num">0.00517</td><td class="num">-</td><td class="units">V, V/(rad/s), V/(rad/s^2)</td><td><span class="chip t-estimated">estimated</span> <span class="chip t-datasheet">datasheet</span> <span class="chip t-estimated">estimated</span></td></tr>
+<tr><td class="mech">FRC arm (equivalent)</td><td class="num">0.1563</td><td class="num">0.48588</td><td class="num">0.03447</td><td class="num">1.4537</td><td class="units">V, V/(rad/s), V/(rad/s^2)</td><td><span class="chip t-estimated">estimated</span> <span class="chip t-datasheet">datasheet</span> <span class="chip t-estimated">estimated</span> <span class="chip t-estimated">estimated</span></td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin:12px 0 0">
+      kS is always estimated: friction cannot come from CAD, so
+      <code>spool calibrate</code> measures it. Every other source tag is in
+      robot.json and gains.json.
+    </p>
+  </section>
+
+  <section>
+    <h2>Before / after</h2>
+    <table>
+      <thead><tr>
+        <th>Scenario</th><th>Rise before</th><th>Rise after</th>
+        <th>Overshoot before %</th><th>Overshoot after %</th>
+        <th>Settle before</th><th>Settle after</th>
+      </tr></thead>
+      <tbody>
+<tr><td class="mech">flywheel spin-up</td><td class="num">0.544</td><td class="num">0.425</td><td class="num">-6.0</td><td class="num">0.0</td><td class="num">2.000</td><td class="num">0.575</td></tr>
+<tr><td class="mech">turret slew</td><td class="num">0.264</td><td class="num">0.264</td><td class="num">-0.4</td><td class="num">-0.4</td><td class="num">0.327</td><td class="num">0.327</td></tr>
+<tr><td class="mech">hood slew</td><td class="num">0.216</td><td class="num">0.216</td><td class="num">-0.9</td><td class="num">-0.9</td><td class="num">0.266</td><td class="num">0.266</td></tr>
+<tr><td class="mech">arm hold</td><td class="num">0.069</td><td class="num">0.070</td><td class="num">-4.9</td><td class="num">0.1</td><td class="num">0.141</td><td class="num">0.109</td></tr>
+<tr><td class="mech">drive forward</td><td class="num">0.706</td><td class="num">0.413</td><td class="num">-10.3</td><td class="num">-0.0</td><td class="num">2.000</td><td class="num">0.545</td></tr>
+<tr><td class="mech">drive strafe</td><td class="num">0.718</td><td class="num">0.341</td><td class="num">-8.9</td><td class="num">1.0</td><td class="num">2.000</td><td class="num">0.420</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin:12px 0 0">
+      Times in seconds. Negative overshoot means the axis came to rest below the
+      target: a steady-state error, not a dip. "before" is a PID with no
+      feedforward, "after" is Spool's feedforward plus a tuned PID.
+    </p>
+    <p class="muted" style="margin:8px 0 0">A shot takes 5.30 J and drops the wheel 17.8 percent, back inside 2 percent in 0.214 s (<span class="ok">PASS</span> at 2 percent in 0.5 s).</p>
+  </section>
+
+  <section>
+    <h2>Servo axes (no PIDF)</h2>
+    <table>
+      <thead><tr>
+        <th>Axis</th><th>Servo</th><th>Ratio</th><th>Speed (deg/s)</th>
+        <th>Torque out (N m)</th><th>Required (N m)</th><th>Margin</th>
+      </tr></thead>
+      <tbody>
+<tr><td class="mech">turret</td><td>SR-Servo-02</td><td class="num">2.40</td><td class="num">272</td><td class="num">11.57</td><td class="num">0.901</td><td class="num">12.8x</td></tr>
+<tr><td class="mech">hood</td><td>SR-Servo-02</td><td class="num">3.95</td><td class="num">165</td><td class="num">9.51</td><td class="num">0.020</td><td class="num">475.6x</td></tr>
+<tr><td class="mech">flower_arm</td><td>SR-Servo-02</td><td class="num">1.00</td><td class="num">652</td><td class="num">5.09</td><td class="num">0.851</td><td class="num">6.0x</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin:12px 0 0">
+      A position servo closes its own loop, so there is no PIDF to tune. Spool
+      exports ratio, speed, torque and limits instead.
+    </p>
+  </section>
+
+  <section>
+    <h2>Plots</h2>
+<div class="grid">
+<figure><img src="../../out/fatman/plots/flywheel.png" alt="Flywheel spin-up and ball recovery"><figcaption>Flywheel spin-up and ball recovery</figcaption></figure>
+<figure><img src="../../out/fatman/plots/turret_slew.png" alt="Turret slew, 0 to 90 deg"><figcaption>Turret slew, 0 to 90 deg</figcaption></figure>
+<figure><img src="../../out/fatman/plots/hood_slew.png" alt="Hood slew, 0 to 45 deg"><figcaption>Hood slew, 0 to 45 deg</figcaption></figure>
+<figure><img src="../../out/fatman/plots/arm_hold.png" alt="Arm hold at 20 deg against gravity"><figcaption>Arm hold at 20 deg against gravity</figcaption></figure>
+<figure><img src="../../out/fatman/plots/drive_forward.png" alt="Drivetrain forward step"><figcaption>Drivetrain forward step</figcaption></figure>
+<figure><img src="../../out/fatman/plots/drive_strafe.png" alt="Drivetrain strafe step"><figcaption>Drivetrain strafe step</figcaption></figure>
+</div>
+  </section>
+
+  <footer>
+    Generated by spool 0.1.0 from out/fatman. Static page: no server, no fetch,
+    opens from file. Rebuild with <code>spool demo</code> or <code>spool fatman</code>.
+  </footer>
+</main>
+
+<script>
+(function () {
+  function ready() {
+    var el = document.getElementById("loading");
+    if (el) { el.style.display = "none"; }
+  }
+  if (document.readyState === "complete") { ready(); }
+  else { window.addEventListener("load", ready); }
+})();
+</script>
+</body>
+</html>

@@ -26,6 +26,23 @@
   "controllers": {
     "ftc": "REV Control Hub + Expansion Hub"
   },
+  "turret_travel": {
+    "resolution": "cad",
+    "ratio": 2.4,
+    "servo_usable_range_deg": 320.0,
+    "servo_capable_span_deg": 133.33,
+    "cad_soft_span_deg": 269.98,
+    "cad_hard_span_deg": 279.95,
+    "soft_limits_deg": [
+      -134.99,
+      134.99
+    ],
+    "hard_limits_deg": [
+      -139.97,
+      139.97
+    ],
+    "warning": "The turret travel in the CAD is ambiguous: the CAD soft stops are 270 deg apart (-135 to 135 deg) and the hard stops are 280 deg apart (-140 to 140 deg); the servo gearing can only reach 133.3 deg at the axis (320 deg usable / 2.40:1). Those numbers cannot all be right, and Spool is not guessing which one to keep. Measure the real travel between the hard stops on the robot and re-run `spool fatman --turret-travel-deg <total deg>`. Until then the CAD stops are kept exactly as encoded and the 0 to 90 deg slew test may run past the physical stop."
+  },
   "provenance": {
     "mass_kg": "estimated",
     "mechanisms.drivetrain.gearing.ratio": "bom",
@@ -39,6 +56,7 @@
     "mechanisms.flywheel.target_speed_rad_s": "estimated",
     "mechanisms.turret.gearing.ratio": "bom",
     "mechanisms.turret.servo": "bom",
+    "mechanisms.turret.limits": "cad",
     "mechanisms.hood.gearing.ratio": "bom",
     "mechanisms.hood.inertia_kgm2": "estimated",
     "mechanisms.flower_arm.servo": "bom",
@@ -52,7 +70,8 @@
     "mechanisms.flywheel.inertia_kgm2": "Rhino 72 mm wheel (0.10 kg est) + 2 stainless discs turned from 3/4in rod (109 g each): J = 0.5 m r^2 summed",
     "mechanisms.flywheel.target_speed_rad_s": "target exit 9.4 m/s with transfer efficiency 0.5 -> rim 18.8 m/s -> 4987 rpm",
     "mechanisms.drivetrain.mu_rolling": "mecanum rollers scrub on foam tile; 0.08 is a starting value. Pedro's Foresight Forward Deceleration Identification measures the real one.",
-    "mechanisms.drivetrain.strafe_efficiency": "mecanum strafe loses 15-30% of forward speed to roller slip; 0.78 midpoint, to be replaced by Pedro's Strafe Velocity Identification."
+    "mechanisms.drivetrain.strafe_efficiency": "mecanum strafe loses 15-30% of forward speed to roller slip; 0.78 midpoint, to be replaced by Pedro's Strafe Velocity Identification.",
+    "mechanisms.turret.limits": "CAD encoding: 135 deg soft and 140 deg hard stops as half-travel. This is ambiguous (see turret_travel); measure the real travel to settle it."
   },
   "mechanisms": [
     {

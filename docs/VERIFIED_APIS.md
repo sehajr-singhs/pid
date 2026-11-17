@@ -218,3 +218,13 @@ not publish it); each database entry says so and marks it in
 | goBILDA 96 mm mecanum roller geometry | not needed; strafe efficiency is a measured/estimated scalar |
 | MoSim `SetTarget` semantics | configuration-dependent; the flywheel uses verified `SetAngularVelocity` instead |
 | MoSim `.bundle` contents / build | Unity-only; not attempted |
+
+---
+
+## 8. SP4 additions: no new third-party symbols
+
+The static demo page (`docs/demo/index.html`), the wider `spool calibrate` CSV
+reader and the `--turret-travel-deg` flag add no Pedro Pathing, MoSim, WPILib, FTC
+SDK or Dashboard calls. The demo is plain HTML/CSS/JS built from `out/fatman`; the
+CSV reader uses Python's standard `csv` module. Nothing in section 7 changed
+status.

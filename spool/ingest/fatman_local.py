@@ -20,6 +20,7 @@ import json
 import math
 from pathlib import Path
 
+from ..motors import get_servo
 from .xlsx import find_rows, read_workbook
 
 # Datasheet identities for the parts that appear in the BOM.
@@ -95,8 +96,102 @@ def _bom_index(rows_by_sheet: dict[str, list[list[str]]]) -> dict:
     return found
 
 
-def build_robot(root: str | Path) -> dict:
-    """Return a robot.json document for FAT MAN."""
+TURRET_SOFT_MARGIN_DEG = 5.0
+
+
+def turret_travel_report(
+    *,
+    ratio: float,
+    usable_range_deg: float,
+    soft_min_rad: float,
+    soft_max_rad: float,
+    hard_min_rad: float,
+    hard_max_rad: float,
+    measured_deg: float | None = None,
+) -> dict:
+    """Describe the turret travel, and say so when the CAD holds two answers.
+
+    FAT MAN's CAD encodes the soft stops as +-135 deg (a 270 deg span) and the hard
+    stops as +-140 deg (a 280 deg span), while the 25T to 60T servo gearing can
+    only reach 320 deg / 2.40 = 133.3 deg at the axis. Those numbers cannot all be
+    right, so this function does not pick one: it keeps the CAD encoding and
+    returns a warning. `measured_deg` is the total travel between the hard stops,
+    measured on the real robot; when it is supplied the stops are rebuilt from it
+    and the result is tagged measured instead.
+    """
+    cad_soft = math.degrees(soft_max_rad - soft_min_rad)
+    cad_hard = math.degrees(hard_max_rad - hard_min_rad)
+    capable = usable_range_deg / ratio
+    report = {
+        "resolution": "cad" if measured_deg is None else "measured",
+        "ratio": round(ratio, 4),
+        "servo_usable_range_deg": round(usable_range_deg, 2),
+        "servo_capable_span_deg": round(capable, 2),
+        "cad_soft_span_deg": round(cad_soft, 2),
+        "cad_hard_span_deg": round(cad_hard, 2),
+        "soft_limits_deg": [round(math.degrees(soft_min_rad), 2),
+                            round(math.degrees(soft_max_rad), 2)],
+        "hard_limits_deg": [round(math.degrees(hard_min_rad), 2),
+                            round(math.degrees(hard_max_rad), 2)],
+        "warning": None,
+    }
+
+    if measured_deg is not None:
+        measured = float(measured_deg)
+        if not 1.0 <= measured <= 720.0:
+            raise ValueError(
+                f"--turret-travel-deg must be between 1 and 720 deg, got {measured:g}"
+            )
+        half = measured / 2.0
+        soft_half = max(half - TURRET_SOFT_MARGIN_DEG, 0.0)
+        report.update({
+            "measured_span_deg": round(measured, 2),
+            "soft_margin_deg": TURRET_SOFT_MARGIN_DEG,
+            "soft_limits_deg": [round(-soft_half, 2), round(soft_half, 2)],
+            "hard_limits_deg": [round(-half, 2), round(half, 2)],
+        })
+        if measured > capable + 0.05:
+            report["warning"] = (
+                f"Measured turret travel {measured:.1f} deg is more than the servo "
+                f"gearing can produce ({capable:.1f} deg at the axis: "
+                f"{usable_range_deg:.0f} deg usable / {ratio:.2f}:1). Check the gear "
+                "ratio or the measurement: the measured stops were applied, but the "
+                "axis cannot reach them as modelled."
+            )
+        return report
+
+    problems = []
+    if abs(cad_hard - cad_soft) > 1e-6:
+        problems.append(
+            f"the CAD soft stops are {cad_soft:.0f} deg apart "
+            f"({math.degrees(soft_min_rad):.0f} to {math.degrees(soft_max_rad):.0f} deg) "
+            f"and the hard stops are {cad_hard:.0f} deg apart "
+            f"({math.degrees(hard_min_rad):.0f} to {math.degrees(hard_max_rad):.0f} deg)"
+        )
+    if capable < cad_soft - 0.05:
+        problems.append(
+            f"the servo gearing can only reach {capable:.1f} deg at the axis "
+            f"({usable_range_deg:.0f} deg usable / {ratio:.2f}:1)"
+        )
+    if problems:
+        report["warning"] = (
+            "The turret travel in the CAD is ambiguous: " + "; ".join(problems) + ". "
+            "Those numbers cannot all be right, and Spool is not guessing which one "
+            "to keep. Measure the real travel between the hard stops on the robot and "
+            "re-run `spool fatman --turret-travel-deg <total deg>`. Until then the CAD "
+            "stops are kept exactly as encoded and the 0 to 90 deg slew test may run "
+            "past the physical stop."
+        )
+    return report
+
+
+def build_robot(root: str | Path, *, turret_travel_deg: float | None = None) -> dict:
+    """Return a robot.json document for FAT MAN.
+
+    turret_travel_deg is the measured total travel between the turret hard stops.
+    Leave it out and the CAD stops are kept as encoded, with a warning in
+    `turret_travel` when the CAD holds two different readings.
+    """
     root = Path(root)
     files = {
         "parts": root / "build" / "parts_final.json",
@@ -150,6 +245,39 @@ def build_robot(root: str | Path) -> dict:
     turret_output_mass = 1.15               # plates + shooter + hood, estimated
     turret_rg = 0.085                       # radius of gyration, estimated
     turret_j = turret_output_mass * turret_rg**2
+    # CAD stops as encoded: 135 deg soft, 140 deg hard, both as half-travel.
+    turret_soft_min, turret_soft_max = -2.356, 2.356
+    turret_hard_min, turret_hard_max = -2.443, 2.443
+    turret_servo = get_servo("swyft-balance")
+    turret_travel = turret_travel_report(
+        ratio=turret_ratio,
+        usable_range_deg=float(turret_servo["usable_range_deg"]),
+        soft_min_rad=turret_soft_min,
+        soft_max_rad=turret_soft_max,
+        hard_min_rad=turret_hard_min,
+        hard_max_rad=turret_hard_max,
+        measured_deg=turret_travel_deg,
+    )
+    if turret_travel_deg is None:
+        turret_limits = {
+            "soft_min_rad": turret_soft_min,
+            "soft_max_rad": turret_soft_max,
+            "hard_min_rad": turret_hard_min,
+            "hard_max_rad": turret_hard_max,
+        }
+        turret_limit_note = "135 deg soft, 140 deg hard stops"
+    else:
+        turret_limits = {
+            "soft_min_rad": round(math.radians(turret_travel["soft_limits_deg"][0]), 4),
+            "soft_max_rad": round(math.radians(turret_travel["soft_limits_deg"][1]), 4),
+            "hard_min_rad": round(math.radians(turret_travel["hard_limits_deg"][0]), 4),
+            "hard_max_rad": round(math.radians(turret_travel["hard_limits_deg"][1]), 4),
+            "measured_span_deg": turret_travel["measured_span_deg"],
+        }
+        turret_limit_note = (
+            f"travel measured at {turret_travel['measured_span_deg']:.1f} deg between "
+            f"hard stops; soft stops {TURRET_SOFT_MARGIN_DEG:.0f} deg inside"
+        )
 
     # ------------------------------------------------------------------ hood
     hood_ratio = 75.0 / 19.0
@@ -175,6 +303,7 @@ def build_robot(root: str | Path) -> dict:
         "mechanisms.flywheel.target_speed_rad_s": "estimated",
         "mechanisms.turret.gearing.ratio": "bom",
         "mechanisms.turret.servo": "bom",
+        "mechanisms.turret.limits": "measured" if turret_travel_deg is not None else "cad",
         "mechanisms.hood.gearing.ratio": "bom",
         "mechanisms.hood.inertia_kgm2": "estimated",
         "mechanisms.flower_arm.servo": "bom",
@@ -210,6 +339,13 @@ def build_robot(root: str | Path) -> dict:
             "mecanum strafe loses 15-30% of forward speed to roller slip; 0.78 midpoint, "
             "to be replaced by Pedro's Strafe Velocity Identification."
         ),
+        "mechanisms.turret.limits": (
+            f"user-measured total travel {turret_travel['measured_span_deg']:.1f} deg "
+            "between hard stops via --turret-travel-deg; soft stops set 5 deg inside"
+            if turret_travel_deg is not None else
+            "CAD encoding: 135 deg soft and 140 deg hard stops as half-travel. This is "
+            "ambiguous (see turret_travel); measure the real travel to settle it."
+        ),
     }
 
     robot = {
@@ -223,6 +359,7 @@ def build_robot(root: str | Path) -> dict:
             "max": [bbox.get("highX", 0.2286), bbox.get("highY", 0.2506), bbox.get("highZ", 0.3149)],
         },
         "controllers": {"ftc": "REV Control Hub + Expansion Hub"},
+        "turret_travel": turret_travel,
         "provenance": provenance,
         "provenance_notes": provenance_notes,
         "mechanisms": [
@@ -282,9 +419,8 @@ def build_robot(root: str | Path) -> dict:
                              "description": "25T servo horn gear -> 60T hub gear (2302-0014-0060)"},
                 "inertia_kgm2": round(turret_j, 6),
                 "holding_torque_nm": 0.901,
-                "limits": {"soft_min_rad": -2.356, "soft_max_rad": 2.356,
-                            "hard_min_rad": -2.443, "hard_max_rad": 2.443},
-                "notes": ["spin plate on bearing stack; 135 deg soft, 140 deg hard stops"],
+                "limits": turret_limits,
+                "notes": [f"spin plate on bearing stack; {turret_limit_note}"],
             },
             {
                 "type": "servo_axis",

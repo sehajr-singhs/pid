@@ -1,5 +1,8 @@
 """Fit recovery on synthetic logs from sim.py, where the truth is known."""
 
+import json
+import math
+
 import numpy as np
 import pytest
 
@@ -125,3 +128,83 @@ def test_large_ks_is_recovered_despite_stall_region():
     assert f.kV == pytest.approx(truth["kV"], rel=0.02)
     assert f.kA == pytest.approx(truth["kA"], rel=0.10)
     assert f.r2 > 0.99
+
+
+# ---------------------------------------------------------- real FTC log format
+
+FTC_HEADER = "time_s,voltage_v,velocity"
+
+
+def _write_log(tmp_path, header: str, rows: list[str]):
+    path = tmp_path / "ftc_log.csv"
+    path.write_text(header + "\n" + "\n".join(rows) + "\n", encoding="utf-8")
+    return path
+
+
+def test_loads_ftc_columns_time_s_voltage_v_velocity(tmp_path):
+    path = _write_log(tmp_path, FTC_HEADER, ["0.000,1.0,2.0", "0.010,1.2,2.5"])
+    log = fitmod.load_csv(path)
+    assert list(log["t"]) == pytest.approx([0.0, 0.01])
+    assert list(log["voltage"]) == pytest.approx([1.0, 1.2])
+    assert list(log["velocity"]) == pytest.approx([2.0, 2.5])
+    assert log["units"] == "rad/s"
+    assert log["source_units"] == "rad"
+
+
+def test_units_in_header_are_tolerated_and_inferred(tmp_path):
+    path = _write_log(tmp_path, "Time (s),Voltage (V),Velocity (ticks/s)",
+                      ["0.000,1.0,14.0", "0.010,1.2,28.0"])
+    log = fitmod.load_csv(path, ticks_per_rev=28.0)
+    assert log["source_units"] == "ticks"
+    assert log["velocity"][1] == pytest.approx(2.0 * math.pi)
+
+
+def test_ticks_are_converted_to_rad_per_s(tmp_path):
+    path = _write_log(tmp_path, FTC_HEADER, ["0.0,1.0,281.25", "0.5,1.1,562.5"])
+    log = fitmod.load_csv(path, units="ticks", ticks_per_rev=281.25)
+    assert log["velocity"][0] == pytest.approx(2.0 * math.pi)
+    assert log["velocity"][1] == pytest.approx(4.0 * math.pi)
+    assert log["source_units"] == "ticks"
+    assert any("ticks/rev" in note for note in log["notes"])
+
+
+def test_ticks_without_ticks_per_rev_is_an_error(tmp_path):
+    path = _write_log(tmp_path, FTC_HEADER, ["0.0,1.0,100.0"])
+    with pytest.raises(ValueError, match="ticks-per-rev"):
+        fitmod.load_csv(path, units="ticks")
+
+
+def test_missing_required_column_names_the_column(tmp_path):
+    path = _write_log(tmp_path, "time_s,voltage_v", ["0.0,1.0"])
+    with pytest.raises(ValueError, match="velocity"):
+        fitmod.load_csv(path)
+
+
+def test_non_numeric_row_is_reported_with_its_line(tmp_path):
+    path = _write_log(tmp_path, FTC_HEADER, ["0.0,1.0,2.0", "0.1,oops,2.5"])
+    with pytest.raises(ValueError, match="row 3"):
+        fitmod.load_csv(path)
+
+
+def test_calibrate_cli_reads_a_ticks_log(tmp_path, capsys):
+    """The documented path: time_s,voltage_v,velocity in ticks/s plus a scale."""
+    axis = _axis()
+    log = synthetic_calibration_log(
+        axis, ks_true=0.35, kv_true=axis.gains.kV, ka_true=axis.gains.kA, rng_seed=11
+    )
+    ticks_per_rev = 28.0
+    rows = [
+        f"{log['t'][i]:.6f},{log['voltage'][i]:.6f},"
+        f"{log['velocity'][i] * ticks_per_rev / (2 * math.pi):.6f}"
+        for i in range(len(log["t"]))
+    ]
+    path = _write_log(tmp_path, FTC_HEADER, rows)
+
+    from spool.cli import main
+
+    assert main(["calibrate", str(path), "--units", "ticks",
+                 "--ticks-per-rev", str(ticks_per_rev)]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["kS"] == pytest.approx(0.35, rel=0.10)
+    assert out["kV"] == pytest.approx(axis.gains.kV, rel=0.02)
+    assert any("ticks/rev" in note for note in out["notes"])

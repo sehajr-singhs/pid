@@ -17,6 +17,8 @@ log is visible instead of silently producing a confident wrong number.
 
 from __future__ import annotations
 
+import math
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -58,21 +60,130 @@ class FitResult:
         }
 
 
-def load_csv(path: str | Path) -> dict[str, np.ndarray]:
-    """Read a SpoolCalibrate CSV: t,voltage,velocity,position,current."""
+# Header names a real team log might use. The canonical SpoolCalibrate header is
+# time_s,voltage_v,velocity,position,current; the older t,voltage,velocity,
+# position,current form (and headers with units in brackets) still load.
+_FIELD_ALIASES = {
+    "time": ("time_s", "t", "time", "timestamp_s", "timestamp"),
+    "voltage": ("voltage_v", "voltage", "volts", "v"),
+    "velocity": ("velocity_rad_s", "velocity_ticks_s", "velocity_rads",
+                 "velocity_tick_s", "velocity_counts_s", "velocity", "speed"),
+    "position": ("position_rad", "position", "pos", "angle_rad", "angle"),
+    "current": ("current_a", "current", "amps", "current_amps"),
+}
+
+
+def _normalise_header(name: str) -> str:
+    """`Velocity (ticks/s)` -> `velocity_ticks_s`."""
+    return re.sub(r"[^a-z0-9]+", "_", name.strip().lower()).strip("_")
+
+
+def _pick_column(columns: dict[str, str], aliases: tuple[str, ...]) -> str | None:
+    for alias in aliases:
+        if alias in columns:
+            return columns[alias]
+    return None
+
+
+def load_csv(path: str | Path, *, units: str | None = None,
+             ticks_per_rev: float | None = None) -> dict:
+    """Read a calibration CSV, in rad/s or from an FTC encoder log.
+
+    Required columns: time_s, voltage_v and velocity. `position` is optional (it
+    is needed for --gravity) and `current` is optional (the fit does not use it).
+    Header names are matched loosely, so `t`, `voltage`, `volts`, `speed` and units
+    written into the name (`velocity (ticks/s)`) all work.
+
+    `units` is "rad" or "ticks". When it is None the units are inferred from the
+    velocity column name, falling back to rad/s. A ticks/s log is converted with
+    `2*pi / ticks_per_rev`; position is converted with the same factor so a
+    --gravity fit still sees radians. `ticks_per_rev` is required for ticks.
+    """
     import csv
 
+    if units not in (None, "rad", "ticks"):
+        raise ValueError(f"units must be 'rad' or 'ticks', got {units!r}")
+
     t, v, w, pos, cur = [], [], [], [], []
+    expected = "time_s,voltage_v,velocity,position,current"
     with open(path, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
-        for row in reader:
-            t.append(float(row["t"]))
-            v.append(float(row["voltage"]))
-            w.append(float(row["velocity"]))
-            pos.append(float(row.get("position", 0.0) or 0.0))
-            cur.append(float(row.get("current", 0.0) or 0.0))
-    return {"t": np.array(t), "voltage": np.array(v), "velocity": np.array(w),
-            "position": np.array(pos), "current": np.array(cur)}
+        fieldnames = reader.fieldnames or []
+        columns = {_normalise_header(n): n for n in fieldnames if n and n.strip()}
+        picked = {key: _pick_column(columns, aliases)
+                  for key, aliases in _FIELD_ALIASES.items()}
+        missing = [key for key in ("time", "voltage", "velocity") if not picked[key]]
+        if missing:
+            raise ValueError(
+                f"missing a {'/'.join(missing)} column. Expected "
+                f"{expected}; found {', '.join(fieldnames) or 'no header row'}"
+            )
+
+        for lineno, row in enumerate(reader, start=2):
+            try:
+                values = []
+                for key in ("time", "voltage", "velocity"):
+                    raw = (row.get(picked[key]) or "").strip()
+                    if not raw:
+                        raise ValueError(f"empty {key} value")
+                    values.append(float(raw))
+                for key in ("position", "current"):
+                    col = picked[key]
+                    raw = ((row.get(col) or "").strip() if col else "")
+                    values.append(float(raw) if raw else 0.0)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"row {lineno} is not numeric: {exc}") from exc
+            t.append(values[0])
+            v.append(values[1])
+            w.append(values[2])
+            pos.append(values[3])
+            cur.append(values[4])
+
+    if not t:
+        raise ValueError(f"{path}: no data rows")
+
+    velocity = np.array(w, dtype=float)
+    position = np.array(pos, dtype=float)
+    velocity_col = picked["velocity"] or "velocity"
+    source_units = units
+    if source_units is None:
+        normalised = _normalise_header(velocity_col)
+        source_units = "ticks" if ("ticks" in normalised or "counts" in normalised) else "rad"
+
+    notes = []
+    if source_units == "ticks":
+        if ticks_per_rev is None:
+            raise ValueError(
+                "a ticks/s log needs --ticks-per-rev (encoder counts per revolution "
+                "of the shaft the velocity is measured on), e.g. 28 on a goBILDA "
+                "5203 at 1:1 or 537.7 for a 312 rpm gearmotor"
+            )
+        if float(ticks_per_rev) <= 0:
+            raise ValueError("--ticks-per-rev must be positive")
+        scale = 2.0 * math.pi / float(ticks_per_rev)
+        velocity = velocity * scale
+        position = position * scale
+        notes.append(
+            f"velocity and position converted from encoder ticks to rad with "
+            f"{float(ticks_per_rev):g} ticks/rev"
+        )
+    else:
+        notes.append("velocity read as rad/s")
+    if units is None and ("ticks" in _normalise_header(velocity_col)
+                          or "rad" in _normalise_header(velocity_col)):
+        notes.append(f"units inferred from the column name {velocity_col!r}; "
+                     "pass --units to override")
+
+    return {
+        "t": np.array(t, dtype=float),
+        "voltage": np.array(v, dtype=float),
+        "velocity": velocity,
+        "position": position,
+        "current": np.array(cur, dtype=float),
+        "units": "rad/s",
+        "source_units": source_units,
+        "notes": notes,
+    }
 
 
 def write_csv(path: str | Path, log: dict) -> Path:
@@ -209,7 +320,7 @@ def fit_feedforward(
     except (np.linalg.LinAlgError, ValueError):
         stderr = {n: float("nan") for n in names}
 
-    notes = [
+    method_notes = [
         f"{method} identification on {len(v2)} samples (|w| > {min_speed}), "
         f"starting at t={t[start]:.2f} s",
         "integral form: no differentiation of the measured speed",
@@ -217,6 +328,7 @@ def fit_feedforward(
         f"derivative identification on {len(v2)} samples",
         f"acceleration from smoothed velocity, window {smooth_window} samples",
     ]
+    notes = list(log.get("notes") or []) + method_notes
     if r2 < 0.9:
         notes.append("R^2 below 0.9: the log is noisy or the model does not fit this axis")
 

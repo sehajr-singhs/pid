@@ -10,6 +10,7 @@ pip install -e .
 pytest
 spool fatman        # -> out/fatman/{robot.json,gains.json,plots,exports}
 spool web           # http://127.0.0.1:8000/  local UI
+docs/demo/index.html  # static demo page, opens from file, no server
 ```
 
 New to this? `docs/QUICKSTART.md` walks an FTC team from CAD export to measured

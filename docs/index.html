@@ -8,7 +8,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--mono)}
 h1{font-family:var(--serif);font-weight:normal;font-size:44px;margin:0 0 4px}
 .sub{color:var(--muted);margin:0 0 36px}
 .sec{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:6px;margin:40px 0 12px}
-a{color:var(--ink)} table{border-collapse:collapse;width:100%} td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+a{color:var(--ink)} ul{padding-left:20px} li{margin-bottom:6px} table{border-collapse:collapse;width:100%} td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
 pre{background:#e2dfd7;padding:12px 14px;overflow-x:auto}
 </style></head><body><div class="wrap">
 <h1>Piπd</h1>
@@ -22,6 +22,22 @@ pre{background:#e2dfd7;padding:12px 14px;overflow-x:auto}
 <tr><td>drivetrain strafe</td><td>0.4873</td><td>5.67795</td><td>1.61485</td></tr>
 <tr><td>flywheel</td><td>1.1167</td><td>0.01858</td><td>0.00517</td></tr></table>
 <p>In simulation the tuned gains settle the flywheel in 0.575 s instead of 2.0 s. kS is a friction estimate and is flagged to measure on the robot. These are simulation numbers, not on-robot results.</p>
+<div class="sec">Why Pedro Pathing would partner</div>
+<p>Pedro Pathing is the path follower a large share of FTC teams use. Its hardest part for a new team is tuning: the Foresight AutoTune procedures need a working, driving robot, and until then <code>Constants.java</code> is full of placeholders. Piπd fills that file from CAD before the robot exists, using Pedro's current API (<code>ForesightConfig</code>, <code>MecanumConfig</code>, <code>PinpointConfig</code>, checked against pedropathing.com):</p>
+<ul>
+<li>FAT MAN starts at 100.66 in/s forward and 78.52 in/s strafe max velocity, plus natural deceleration from a friction model, instead of zeros.</li>
+<li>Piπd also writes a tuning checklist that walks the team through Pedro's own AutoTune steps in order and says which constant each one replaces.</li>
+<li>For Pedro, that means fewer teams stuck at setup, fewer "my robot spins in circles" support questions, and a path from Onshape straight into their library.</li>
+</ul>
+<p>What a partnership could be: a "start from CAD" page in Pedro's docs that links to Piπd, and a check that Piπd's export stays in sync when Pedro's API changes. The last API change already broke the old docs pages, which Piπd caught.</p>
+<div class="sec">Why MoSimulator would partner</div>
+<p>MoSimulator is an FRC robot simulator with community robot mods (a Unity bundle, a C# .dll and a catalog). Building a mod is mostly hand work: modeling the hierarchy, picking joint limits and guessing PID values so the robot doesn't shake or fly apart. Piπd generates that from CAD:</p>
+<ul>
+<li><code>hierarchy.json</code> with joints, axes, limits and masses, <code>params.json</code> with per-joint gains from physics, and a C# skeleton that uses MoSim's real <code>GenericJoint</code> and <code>PidConstants</code> API.</li>
+<li>For MoSim, that means more community robots that move like the real ones, faster, and an on-ramp from a team's actual CAD to a playable robot.</li>
+</ul>
+<p>What a partnership could be: a Piπd export button listed in MoSim's modding docs, and MoSim's feedback on which joint types to support next.</p>
+<p class="sub" style="margin-top:16px">Neither project has partnered with Piπd yet. These are the pitches, and both exports are in the repo to try.</p>
 <div class="sec">Try it</div>
 <pre>git clone https://github.com/sehajr-singhs/pid && cd pid
 pip install -e .

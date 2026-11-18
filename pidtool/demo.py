@@ -188,7 +188,7 @@ _TEMPLATE = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pid demo - {robot_name}</title>
+<title>Piπd demo - {robot_name}</title>
 <style>
   :root {{
     --bg:#0a0c10; --panel:#11151b; --panel-2:#141a22; --line:#232b36;
@@ -276,7 +276,7 @@ _TEMPLATE = """<!doctype html>
 </head>
 <body>
 <header>
-  <h1>pid<span class="dot">.</span> demo</h1>
+  <h1>Piπd<span class="dot">.</span> demo</h1>
   <span class="sub">CAD in, tuned robot out</span>
   <span class="status" id="loading"><span class="spinner"></span>tuning...</span>
 </header>

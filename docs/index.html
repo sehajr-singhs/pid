@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Piπd</title>
+<style>
+:root{--bg:#ebe8e1;--ink:#1a1a1a;--muted:#6f6f6a;--line:#d8d5cd;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:"SF Mono","JetBrains Mono",Consolas,monospace}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--mono)}
+.wrap{max-width:760px;margin:0 auto;padding:64px 28px 120px}
+h1{font-family:var(--serif);font-weight:normal;font-size:44px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 36px}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:6px;margin:40px 0 12px}
+a{color:var(--ink)} table{border-collapse:collapse;width:100%} td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+pre{background:#e2dfd7;padding:12px 14px;overflow-x:auto}
+</style></head><body><div class="wrap">
+<h1>Piπd</h1>
+<p class="sub">CAD in, tuned robot out. Starting gains for FTC and FRC mechanisms, from physics, before the robot is built.</p>
+<p><a href="demo/">Open the demo (FAT MAN, FTC 19426)</a> &nbsp;·&nbsp; <a href="https://github.com/sehajr-singhs/pid">Code on GitHub</a></p>
+<div class="sec">What it does</div>
+<p>Reads a robot's CAD export and parts list, works out each mechanism's mass, inertia and gearing, and computes kS, kV, kA, kG and PIDF from motor datasheets. It checks them in a 1 kHz simulator, tunes them, and exports constants for Pedro Pathing, FTC Dashboard and WPILib. Then one logged test run on the real robot refits the gains with <code>pid calibrate</code>.</p>
+<div class="sec">FAT MAN, from CAD alone</div>
+<table><tr><th>Mechanism</th><th>kS (V)</th><th>kV</th><th>kA</th></tr>
+<tr><td>drivetrain forward</td><td>0.4873</td><td>4.42880</td><td>1.25959</td></tr>
+<tr><td>drivetrain strafe</td><td>0.4873</td><td>5.67795</td><td>1.61485</td></tr>
+<tr><td>flywheel</td><td>1.1167</td><td>0.01858</td><td>0.00517</td></tr></table>
+<p>In simulation the tuned gains settle the flywheel in 0.575 s instead of 2.0 s. kS is a friction estimate and is flagged to measure on the robot. These are simulation numbers, not on-robot results.</p>
+<div class="sec">Try it</div>
+<pre>git clone https://github.com/sehajr-singhs/pid && cd pid
+pip install -e .
+pid fatman</pre>
+<div class="sec">About</div>
+<p>Built by Sehaj Randhir Singh, lead mechanical engineer on FTC Star Strikers 19426. MIT license.</p>
+</div></body></html>

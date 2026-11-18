@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "FAT MAN",
-  "generator": "spool.ingest.fatman_local",
+  "generator": "pidtool.ingest.fatman_local",
   "source_files": [
     "build\\parts_final.json",
     "build\\asm_positions.json",
@@ -41,7 +41,7 @@
       -139.97,
       139.97
     ],
-    "warning": "The turret travel in the CAD is ambiguous: the CAD soft stops are 270 deg apart (-135 to 135 deg) and the hard stops are 280 deg apart (-140 to 140 deg); the servo gearing can only reach 133.3 deg at the axis (320 deg usable / 2.40:1). Those numbers cannot all be right, and Spool is not guessing which one to keep. Measure the real travel between the hard stops on the robot and re-run `spool fatman --turret-travel-deg <total deg>`. Until then the CAD stops are kept exactly as encoded and the 0 to 90 deg slew test may run past the physical stop."
+    "warning": "The turret travel in the CAD is ambiguous: the CAD soft stops are 270 deg apart (-135 to 135 deg) and the hard stops are 280 deg apart (-140 to 140 deg); the servo gearing can only reach 133.3 deg at the axis (320 deg usable / 2.40:1). Those numbers cannot all be right, and Pi\u03c0d is not guessing which one to keep. Measure the real travel between the hard stops on the robot and re-run `pid fatman --turret-travel-deg <total deg>`. Until then the CAD stops are kept exactly as encoded and the 0 to 90 deg slew test may run past the physical stop."
   },
   "provenance": {
     "mass_kg": "estimated",

@@ -6,10 +6,10 @@ import math
 import numpy as np
 import pytest
 
-from spool.motors import motors as load_motors
-from spool.physics.mechanisms import build_robot
-from spool.physics.sim import synthetic_calibration_log
-from spool.runtime import fit as fitmod
+from pidtool.motors import motors as load_motors
+from pidtool.physics.mechanisms import build_robot
+from pidtool.physics.sim import synthetic_calibration_log
+from pidtool.runtime import fit as fitmod
 
 
 def _axis():
@@ -200,7 +200,7 @@ def test_calibrate_cli_reads_a_ticks_log(tmp_path, capsys):
     ]
     path = _write_log(tmp_path, FTC_HEADER, rows)
 
-    from spool.cli import main
+    from pidtool.cli import main
 
     assert main(["calibrate", str(path), "--units", "ticks",
                  "--ticks-per-rev", str(ticks_per_rev)]) == 0

@@ -4,13 +4,13 @@ import json
 
 import pytest
 
-from spool import demo
+from pidtool import demo
 
 
 def _gains() -> dict:
     return {
         "robot": "FAT MAN",
-        "spool_version": "0.1.0",
+        "pid_version": "0.1.0",
         "mechanisms": {
             "drivetrain": {
                 "forward": {"kS": 0.4873, "kV": 4.4288, "kA": 1.2596, "kG": 0.0},
@@ -71,7 +71,7 @@ def _robot(warning: bool = True) -> dict:
 
 def test_render_shows_gains_scenarios_and_loading_text():
     html = demo.render_demo(_gains(), _robot(), {})
-    assert "spooling..." in html
+    assert "tuning..." in html
     assert "FAT MAN" in html
     assert "12.70" in html
     assert "1.1167" in html
@@ -116,5 +116,5 @@ def test_build_demo_links_plots_relative_to_the_page(tmp_path):
 
 
 def test_build_demo_needs_gains_json(tmp_path):
-    with pytest.raises(FileNotFoundError, match="spool fatman"):
+    with pytest.raises(FileNotFoundError, match="pid fatman"):
         demo.build_demo(tmp_path)

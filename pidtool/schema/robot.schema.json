@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spool.dev/schema/robot.schema.json",
+  "title": "Piπd robot.json",
+  "description": "Open robot spec written by pidtool.ingest and consumed by pidtool.physics. Units are SI unless a field name says otherwise. Every numeric leaf may carry a sibling provenance entry.",
+  "type": "object",
+  "required": ["schema_version", "name", "mass_kg", "mechanisms"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "type": "string" },
+    "generator": { "type": "string" },
+    "source_files": { "type": "array", "items": { "type": "string" } },
+    "mass_kg": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Total robot mass, kg."
+    },
+    "envelope_m": {
+      "type": "object",
+      "description": "Axis-aligned bounding box of the CAD assembly, metres.",
+      "properties": {
+        "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+        "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      },
+      "required": ["min", "max"]
+    },
+    "provenance": {
+      "type": "object",
+      "description": "source tag per dotted parameter path: cad | bom | datasheet | estimated",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["cad", "bom", "datasheet", "estimated"]
+      }
+    },
+    "provenance_notes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "controllers": {
+      "type": "object",
+      "properties": {
+        "ftc": { "type": "string" },
+        "frc": { "type": "string" }
+      }
+    },
+    "mechanisms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/rotary" },
+          { "$ref": "#/$defs/arm" },
+          { "$ref": "#/$defs/drive" },
+          { "$ref": "#/$defs/servo" }
+        ]
+      }
+    },
+    "frc_equivalent": {
+      "type": "array",
+      "description": "Same mechanisms re-expressed with FRC motors, used to prove the WPILib export path.",
+      "items": { "type": "object" }
+    }
+  },
+  "$defs": {
+    "provenanceKey": { "type": "string" },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "soft_min_rad": { "type": "number" },
+        "soft_max_rad": { "type": "number" },
+        "hard_min_rad": { "type": "number" },
+        "hard_max_rad": { "type": "number" }
+      }
+    },
+    "friction": {
+      "type": "object",
+      "properties": {
+        "mu_bearing": { "type": "number" },
+        "preload_n": { "type": "number" },
+        "n_bearings": { "type": "integer", "minimum": 0 },
+        "bearing_radius_m": { "type": "number" },
+        "mu_belt": { "type": "number" },
+        "belt_preload_n": { "type": "number" },
+        "pulley_radius_m": { "type": "number" },
+        "n_belts": { "type": "integer", "minimum": 0 },
+        "seal_drag_nm": { "type": "number" },
+        "extra_nm": { "type": "number" }
+      }
+    },
+    "gearing": {
+      "type": "object",
+      "required": ["ratio"],
+      "properties": {
+        "ratio": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Motor turns per output turn. >1 is a reduction, <1 is a step-up."
+        },
+        "efficiency": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "source": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "base": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "motor": { "type": "string", "description": "Key into pid/motors/db.json" },
+        "count": { "type": "integer", "minimum": 1, "default": 1 },
+        "gearing": { "$ref": "#/$defs/gearing" },
+        "friction": { "$ref": "#/$defs/friction" },
+        "limits": { "$ref": "#/$defs/limits" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "rotary": {
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "properties": {
+        "type": { "enum": ["flywheel", "turret", "hood", "elevator", "rotary"] },
+        "inertia_kgm2": { "type": "number", "exclusiveMinimum": 0 },
+        "load_mass_kg": { "type": "number" },
+        "load_radius_m": { "type": "number" },
+        "target_speed_rad_s": { "type": "number" },
+        "target_position_rad": { "type": "number" }
+      },
+      "required": ["inertia_kgm2"]
+    },
+    "arm": {
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "properties": {
+        "type": { "const": "arm" },
+        "inertia_kgm2": { "type": "number", "exclusiveMinimum": 0 },
+        "arm_mass_kg": { "type": "number", "exclusiveMinimum": 0 },
+        "r_com_m": { "type": "number", "exclusiveMinimum": 0 },
+        "target_position_rad": { "type": "number" }
+      },
+      "required": ["inertia_kgm2", "arm_mass_kg", "r_com_m"]
+    },
+    "drive": {
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "properties": {
+        "type": { "enum": ["mecanum_drive", "tank_drive", "swerve_drive"] },
+        "robot_mass_kg": { "type": "number", "exclusiveMinimum": 0 },
+        "wheel_radius_m": { "type": "number", "exclusiveMinimum": 0 },
+        "track_width_m": { "type": "number" },
+        "wheelbase_m": { "type": "number" },
+        "strafe_efficiency": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "mu_rolling": { "type": "number", "minimum": 0 }
+      },
+      "required": ["robot_mass_kg", "wheel_radius_m"]
+    },
+    "servo": {
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "properties": {
+        "type": { "const": "servo_axis" },
+        "servo": { "type": "string", "description": "Key into pid/motors/db.json servos" },
+        "servo_count": { "type": "integer", "minimum": 1 },
+        "holding_torque_nm": { "type": "number", "minimum": 0 },
+        "gear_pitch_radius_m": { "type": "number" },
+        "target_position_rad": { "type": "number" },
+        "target_speed_rad_s": { "type": "number" }
+      },
+      "required": ["servo"]
+    }
+  }
+}

@@ -1,10 +1,10 @@
-"""Turret travel: the CAD holds two readings, and Spool must not pick one."""
+"""Turret travel: the CAD holds two readings, and Piπd must not pick one."""
 
 import math
 
 import pytest
 
-from spool.ingest.fatman_local import turret_travel_report
+from pidtool.ingest.fatman_local import turret_travel_report
 
 CAD = dict(
     ratio=60.0 / 25.0,
@@ -57,7 +57,7 @@ def test_impossible_measurement_is_rejected():
 
 
 def test_summary_warning_names_the_conflict():
-    from spool.cli import _turret_travel_lines
+    from pidtool.cli import _turret_travel_lines
 
     doc = {"turret_travel": turret_travel_report(**CAD)}
     lines = "\n".join(_turret_travel_lines(doc))
@@ -67,7 +67,7 @@ def test_summary_warning_names_the_conflict():
 
 
 def test_summary_reports_a_measured_travel_without_warning():
-    from spool.cli import _turret_travel_lines
+    from pidtool.cli import _turret_travel_lines
 
     doc = {"turret_travel": turret_travel_report(**CAD, measured_deg=132.0)}
     text = "\n".join(_turret_travel_lines(doc))

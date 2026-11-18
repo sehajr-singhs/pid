@@ -5,9 +5,9 @@ import math
 import numpy as np
 import pytest
 
-from spool.motors import get_servo, motors as load_motors
-from spool.physics.mechanisms import build_robot
-from spool.physics.sim import PID, ServoAxis, simulate_drive, simulate_rotary, simulate_servo
+from pidtool.motors import get_servo, motors as load_motors
+from pidtool.physics.mechanisms import build_robot
+from pidtool.physics.sim import PID, ServoAxis, simulate_drive, simulate_rotary, simulate_servo
 
 
 @pytest.fixture(scope="module")

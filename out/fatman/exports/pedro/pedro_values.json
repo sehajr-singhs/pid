@@ -2,7 +2,7 @@
   "units": {
     "maxAchievable*Velocity": "in/s",
     "natural*Deceleration": "in/s^2",
-    "controllers": "volts per inch of error (spool interpretation)"
+    "controllers": "volts per inch of error (pid interpretation)"
   },
   "derived": {
     "maxAchievableForwardVelocity": 100.66269814066693,

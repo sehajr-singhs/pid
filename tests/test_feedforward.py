@@ -22,7 +22,7 @@ import math
 
 import pytest
 
-from spool.physics.feedforward import (
+from pidtool.physics.feedforward import (
     FrictionModel,
     arm_gains,
     elevator_gains,
@@ -32,7 +32,7 @@ from spool.physics.feedforward import (
     steady_state_speed,
     voltage_at_state,
 )
-from spool.physics.motor import Gearbox, Motor
+from pidtool.physics.motor import Gearbox, Motor
 
 R_OHM = 12.0 / 9.2
 KT = 0.1442 / 9.2

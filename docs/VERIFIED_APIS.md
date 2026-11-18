@@ -1,7 +1,7 @@
 # Verified APIs
 
-Every third-party class, field and method Spool emits, where it was read from, and
-what could **not** be verified. Rule: if it is not in this file, Spool does not
+Every third-party class, field and method Piπd emits, where it was read from, and
+what could **not** be verified. Rule: if it is not in this file, Piπd does not
 emit it.
 
 All URLs fetched 2026-11-15.
@@ -62,7 +62,7 @@ Identification, Forward Translational Tuner, Strafe Translational Tuner, Tests.
    previous API.** `https://pedro-pathing.github.io/Docs/` now redirects to
    `https://pedropathing.com/`, and the pages that showed that API
    (`/docs/pathing/tuning/setup`, `/docs/pathing/examples/constants`) return
-   **404**. Spool therefore does not emit them. If a team is pinned to an older
+   **404**. Piπd therefore does not emit them. If a team is pinned to an older
    Pedro release, the numbers transfer (max velocity, natural deceleration,
    d-pad POD offsets) but the class names must be moved by hand.
 
@@ -93,7 +93,7 @@ the field.
 * Each mod is a folder: `<Mod>.bundle`, `<Mod>.dll`, `catalog.json` (plus
   `catalog.hash` and `settings.json` copied from the Addressables build).
 * Install path: `%userprofile%\AppData\LocalLow\CascadeStudios\MoSimulator\Mods`.
-* **Mods can carry custom C# code** — the `.dll` is described as "the robot's
+* **Mods can carry custom C# code**, the `.dll` is described as "the robot's
   code". The brief's "UNVERIFIED" question is answered: yes.
 ### Symbols used, and where each was read
 
@@ -113,7 +113,7 @@ which the generated file says in its header.
 
 ### Consequence for FAT MAN
 
-MoSim simulates **FRC** robots; FAT MAN is FTC. Spool therefore exports the
+MoSim simulates **FRC** robots; FAT MAN is FTC. Piπd therefore exports the
 FRC-equivalent mechanism set (Kraken/NEO) and says so in
 `out/fatman/exports/mosim/README.md`. The two-servo FTC turret is not simulated.
 
@@ -145,14 +145,14 @@ verified `SetAngularVelocity` in degrees/second instead of guessing what a
 ### SysId "compatible JSON"
 
 The brief asks for SysId-compatible JSON. SysId's documented input is a WPILog
-file; no public JSON *dataset* schema is documented, so Spool does not invent one.
-Instead it emits `sysid_fields.json`, the field map that `SpoolCalibrate`'s
+file; no public JSON *dataset* schema is documented, so Piπd does not invent one.
+Instead it emits `sysid_fields.json`, the field map that `PidCalibrate`'s
 wpilog satisfies, plus `SYSID.md` with the click-by-click. Fabricating a JSON
 schema would have been exactly the kind of guessed API the brief forbids.
 
 ---
 
-## 4. FTC SDK (for `runtime/ftc/SpoolCalibrate.java`)
+## 4. FTC SDK (for `runtime/ftc/PidCalibrate.java`)
 
 Symbols used: `LinearOpMode`, `@TeleOp`, `DcMotorEx`, `DcMotor.RunMode`
 (`STOP_AND_RESET_ENCODER`, `RUN_WITHOUT_ENCODER`),
@@ -223,7 +223,7 @@ not publish it); each database entry says so and marks it in
 
 ## 8. SP4 additions: no new third-party symbols
 
-The static demo page (`docs/demo/index.html`), the wider `spool calibrate` CSV
+The static demo page (`docs/demo/index.html`), the wider `pid calibrate` CSV
 reader and the `--turret-travel-deg` flag add no Pedro Pathing, MoSim, WPILib, FTC
 SDK or Dashboard calls. The demo is plain HTML/CSS/JS built from `out/fatman`; the
 CSV reader uses Python's standard `csv` module. Nothing in section 7 changed

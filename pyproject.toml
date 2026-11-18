@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "spool"
+name = "pidtool"
 version = "0.1.0"
-description = "Spool: CAD in, tuned robot out. Physics-based starting gains for FTC and FRC mechanisms."
+description = "Piπd: CAD in, tuned robot out. Physics-based starting gains for FTC and FRC mechanisms."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -21,18 +21,19 @@ step = ["trimesh>=4"]
 onshape = ["requests>=2.31"]
 
 [project.scripts]
-spool = "spool.cli:main"
+pid = "pidtool.cli:main"
+spool = "pidtool.cli:spool_alias"  # old name, kept for one release
 
 [tool.setuptools.packages.find]
-include = ["spool*"]
+include = ["pidtool*"]
 
 [tool.setuptools.package-data]
-spool = ["motors/*.json", "schema/*.json", "web/*.html"]
+pidtool = ["motors/*.json", "schema/*.json", "web/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # This laptop has a globally installed `typeguard` whose pytest plugin imports
 # ast.Str (removed in Python 3.12) and crashes pytest at startup on 3.14 before
-# any test is collected. It has nothing to do with spool, so keep it out of this
+# any test is collected. It has nothing to do with pid, so keep it out of this
 # project's test run. Remove this line once typeguard is upgraded.
 addopts = "-p no:typeguard"

@@ -1,6 +1,6 @@
 {
   "robot": "FAT MAN",
-  "spool_version": "0.1.0",
+  "pid_version": "0.1.0",
   "units": {
     "kS": "V",
     "kV": "V per (rad/s) rotary, V per (m/s) linear",
@@ -18,7 +18,7 @@
         "kG": 0.0,
         "units": "V, V/(m/s), V/(m/s^2), V",
         "saturation_voltage": 12.0,
-        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "kS_source": "model (flagged: measure with PidCalibrate)",
         "notes": [
           "kV/kA per m/s of chassis motion; all four motors share the load"
         ],
@@ -42,7 +42,7 @@
         "kG": 0.0,
         "units": "V, V/(m/s), V/(m/s^2), V",
         "saturation_voltage": 12.0,
-        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "kS_source": "model (flagged: measure with PidCalibrate)",
         "notes": [
           "strafe uses roller slip factor 0.78 on achievable velocity"
         ],
@@ -70,7 +70,7 @@
         "kG": null,
         "gear_ratio": "bom",
         "detail": {
-          "kS": "friction model; measure it with SpoolCalibrate",
+          "kS": "friction model; measure it with PidCalibrate",
           "kV": "k_e from the motor datasheet; gear ratio tagged bom",
           "kA": "inertia / robot mass estimated from CAD geometry",
           "kG": null
@@ -105,11 +105,11 @@
         "kG": 0.0,
         "units": "V, V/(rad/s), V/(rad/s^2), V",
         "saturation_voltage": 12.0,
-        "kS_source": "model (flagged: measure with SpoolCalibrate)",
+        "kS_source": "model (flagged: measure with PidCalibrate)",
         "notes": [
           "two 6000 rpm motors on one shaft, 20T -> 20T GT2 belt (1:1; 158T is the belt length, not a ratio)",
           "shooter hood servo and ball blocker servo are separate axes",
-          "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+          "kS is a friction model, not CAD: measure it with PidCalibrate"
         ],
         "basis": {
           "motor": "gobilda-5203-2402-0001",
@@ -148,7 +148,7 @@
         "kG": null,
         "gear_ratio": "bom",
         "detail": {
-          "kS": "friction model; measure it with SpoolCalibrate",
+          "kS": "friction model; measure it with PidCalibrate",
           "kV": "k_e from the motor datasheet; gear ratio tagged bom",
           "kA": "inertia / robot mass estimated from CAD geometry",
           "kG": null
@@ -169,7 +169,7 @@
           "kG": 0.0,
           "units": "V, V/(m/s), V/(m/s^2), V",
           "saturation_voltage": 12.0,
-          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "kS_source": "model (flagged: measure with PidCalibrate)",
           "notes": [
             "kV/kA per m/s of chassis motion; all four motors share the load"
           ],
@@ -193,7 +193,7 @@
           "kG": 0.0,
           "units": "V, V/(m/s), V/(m/s^2), V",
           "saturation_voltage": 12.0,
-          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "kS_source": "model (flagged: measure with PidCalibrate)",
           "notes": [
             "strafe uses roller slip factor 0.78 on achievable velocity"
           ],
@@ -219,7 +219,7 @@
           "kG": null,
           "gear_ratio": "estimated",
           "detail": {
-            "kS": "friction model; measure it with SpoolCalibrate",
+            "kS": "friction model; measure it with PidCalibrate",
             "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
             "kA": "inertia / robot mass estimated from CAD geometry",
             "kG": null
@@ -236,10 +236,10 @@
           "kG": 0.0,
           "units": "V, V/(rad/s), V/(rad/s^2), V",
           "saturation_voltage": 12.0,
-          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "kS_source": "model (flagged: measure with PidCalibrate)",
           "notes": [
             "FRC-equivalent: single Kraken, heavier 4.5 in wheel",
-            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+            "kS is a friction model, not CAD: measure it with PidCalibrate"
           ],
           "basis": {
             "motor": "kraken-x60",
@@ -267,7 +267,7 @@
           "kG": null,
           "gear_ratio": "estimated",
           "detail": {
-            "kS": "friction model; measure it with SpoolCalibrate",
+            "kS": "friction model; measure it with PidCalibrate",
             "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
             "kA": "inertia / robot mass estimated from CAD geometry",
             "kG": null
@@ -284,10 +284,10 @@
           "kG": 0.0,
           "units": "V, V/(rad/s), V/(rad/s^2), V",
           "saturation_voltage": 12.0,
-          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "kS_source": "model (flagged: measure with PidCalibrate)",
           "notes": [
             "FRC-equivalent of the servo turret, for WPILib gains",
-            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+            "kS is a friction model, not CAD: measure it with PidCalibrate"
           ],
           "basis": {
             "motor": "neo",
@@ -315,7 +315,7 @@
           "kG": null,
           "gear_ratio": "estimated",
           "detail": {
-            "kS": "friction model; measure it with SpoolCalibrate",
+            "kS": "friction model; measure it with PidCalibrate",
             "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
             "kA": "inertia / robot mass estimated from CAD geometry",
             "kG": null
@@ -332,10 +332,10 @@
           "kG": 1.4536916470588235,
           "units": "V, V/(rad/s), V/(rad/s^2), V",
           "saturation_voltage": 12.0,
-          "kS_source": "model (flagged: measure with SpoolCalibrate)",
+          "kS_source": "model (flagged: measure with PidCalibrate)",
           "notes": [
             "FRC-equivalent 4-bar arm; this is where kG is a real voltage",
-            "kS is a friction model, not CAD: measure it with SpoolCalibrate"
+            "kS is a friction model, not CAD: measure it with PidCalibrate"
           ],
           "basis": {
             "motor": "neo",
@@ -366,7 +366,7 @@
           "kG": "estimated",
           "gear_ratio": "estimated",
           "detail": {
-            "kS": "friction model; measure it with SpoolCalibrate",
+            "kS": "friction model; measure it with PidCalibrate",
             "kV": "k_e from the motor datasheet; gear ratio tagged estimated",
             "kA": "inertia / robot mass estimated from CAD geometry",
             "kG": "arm mass and centre of mass estimated from CAD geometry"

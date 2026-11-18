@@ -4,8 +4,8 @@ import math
 
 import pytest
 
-from spool.motors import get_motor, load_db
-from spool.physics.motor import Gearbox, Motor, reflected_inertia
+from pidtool.motors import get_motor, load_db
+from pidtool.physics.motor import Gearbox, Motor, reflected_inertia
 
 
 @pytest.fixture()
@@ -59,7 +59,7 @@ def test_rejects_bad_gearbox(rs555):
     with pytest.raises(ValueError):
         # efficiency > 1 is not physical
         Gearbox(ratio=1.0, efficiency=1.5)
-        from spool.physics.feedforward import rotary_gains
+        from pidtool.physics.feedforward import rotary_gains
 
         rotary_gains("x", rs555, Gearbox(ratio=1.0, efficiency=1.5), 0.001)
 
